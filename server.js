@@ -77,16 +77,23 @@ app.post('/api/scan-prescription', async (req, res) => {
   }
 
   const body = {
-    system_instruction: {
-      parts: [{ text: EXTRACTION_SYSTEM_PROMPT }]
-    },
-    contents: [{
-      role: 'user',
-      parts: [
-        { inline_data: { mime_type: mediaType, data: base64Data } },
-        { text: 'Витягни дані з цього рецепта згідно інструкції. Виведи тільки JSON.' }
-      ]
-    }],
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: EXTRACTION_SYSTEM_PROMPT }]
+      },
+      {
+        role: 'model',
+        parts: [{ text: 'Зрозуміло. Чекаю на документ.' }]
+      },
+      {
+        role: 'user',
+        parts: [
+          { inline_data: { mime_type: mediaType, data: base64Data } },
+          { text: 'Витягни дані з цього рецепта згідно інструкції. Виведи тільки JSON.' }
+        ]
+      }
+    ],
     generationConfig: {
       temperature: 0.1,
       maxOutputTokens: 8192
