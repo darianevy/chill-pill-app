@@ -10,7 +10,7 @@ app.use(express.json({ limit: '25mb' }));
 app.use(express.static(join(__dirname, 'public')));
 
 const GEMINI_MODEL = 'gemini-1.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
 
 const EXTRACTION_SYSTEM_PROMPT = `Ты — система извлечения структурированных данных, встроенная в приложение для управления приёмом лекарств. Твоя единственная задача — прочитать изображение или документ медицинского рецепта и извлечь препараты, дозировки, схему приёма и метаданные документа в строгом JSON-формате.
 
