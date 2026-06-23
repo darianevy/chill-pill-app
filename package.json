@@ -1,0 +1,15 @@
+{
+  "name": "chill-pill-app",
+  "version": "1.0.0",
+  "description": "Medication management app with AI prescription scanning",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2"
+  }
+}

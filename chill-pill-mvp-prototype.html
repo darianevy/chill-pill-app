@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chill Pill — MVP прототип</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --off-white: #FAF9F6; --white: #FFFFFF; --black: #1A1C1A; --dark: #141B2B;
+    --body-text: #574237; --muted: #8A7266;
+    --primary: #F47C2C; --primary-dark: #9B4500; --primary-light: #FFDBCA;
+    --card-blue: #C3EFFF; --section-blue: #E8F1F8;
+    --conf-high-bg: #DCEFE3; --conf-high-text: #0E5C49;
+    --conf-medium-bg: #FBE8C2; --conf-medium-text: #8A5A12;
+    --conf-low-bg: #FBDAD3; --conf-low-text: #B23A22;
+    --shadow-soft: 2px 2px 0 rgba(26,28,26,0.18);
+    --shadow-strong: 4px 4px 0 var(--black);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; background: var(--off-white); color: var(--black); -webkit-font-smoothing: antialiased; line-height: 1.45; }
+  h1, h2, h3, .display { font-family: 'Epilogue', sans-serif; font-weight: 900; margin: 0; letter-spacing: -0.01em; }
+  button:focus-visible, .tab:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--primary-dark); outline-offset: 2px; }
+
+  /* ---------- TOP BAR: одна строка, центр через grid ---------- */
+  .topbar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; padding: 14px 24px; background: var(--white); border-bottom: 2px solid var(--black); position: sticky; top: 0; z-index: 20; }
+  .logo { justify-self: start; background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; flex-shrink: 0; }
+  .logo-text { display: none; font-family: 'Epilogue', sans-serif; font-weight: 900; font-size: 17px; color: var(--black); white-space: nowrap; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; justify-self: center; max-width: 100%; }
+  .tab { padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; border: 2px solid transparent; background: transparent; color: var(--body-text); white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .tab.is-active { border-color: var(--black); background: var(--primary-light); color: var(--black); }
+  .topbar-right { justify-self: end; display: flex; align-items: center; gap: 10px; }
+  .hamburger-btn { display: none; width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--black); background: var(--white); font-size: 19px; cursor: pointer; align-items: center; justify-content: center; box-shadow: var(--shadow-strong); flex-shrink: 0; }
+  .mobile-nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); border-bottom: 2px solid var(--black); flex-direction: column; gap: 4px; padding: 10px; z-index: 25; }
+  .mobile-nav.is-open { display: flex; }
+  .mobile-nav-item { text-align: left; padding: 13px 16px; border-radius: 10px; border: none; background: transparent; font-weight: 600; font-size: 15.5px; color: var(--body-text); cursor: pointer; font-family: 'Inter', sans-serif; }
+  .mobile-nav-item.is-active { background: var(--primary-light); color: var(--black); }
+
+  .btn { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 15px; border-radius: 14px; border: 2px solid var(--black); padding: 11px 20px; cursor: pointer; box-shadow: var(--shadow-strong); transition: transform .05s ease; }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--black); }
+  .btn-primary { background: var(--primary); color: var(--white); }
+  .btn-secondary { background: var(--white); color: var(--black); }
+  .btn-sm { padding: 7px 12px; font-size: 13px; border-radius: 10px; box-shadow: 2px 2px 0 var(--black); }
+  .btn-text { background: none; border: none; box-shadow: none; color: var(--primary-dark); font-weight: 700; cursor: pointer; padding: 0; font-size: 13px; }
+  .btn-text:disabled { opacity: .4; cursor: not-allowed; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 90px; }
+  .view { display: none; }
+  .view.is-active { display: block; }
+  .section-title { font-size: 21px; margin-bottom: 5px; }
+  .section-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; }
+
+  /* карточки по умолчанию — мягкий стиль (tier 2) */
+  .card { background: var(--white); border: 1.5px solid var(--black); border-radius: 18px; box-shadow: var(--shadow-soft); padding: 20px; }
+  .card + .card { margin-top: 14px; }
+
+  /* ---------- DASHBOARD ---------- */
+  .greeting-row { margin-bottom: 22px; }
+  .dose-group-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; }
+  .dose-group-label:first-child { margin-top: 0; }
+  .dose-list { display: flex; flex-direction: column; gap: 10px; }
+  .dose-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border: 1.5px solid var(--black); border-radius: 16px; background: var(--white); gap: 10px; flex-wrap: wrap; }
+  .dose-item.is-due { background: var(--primary-light); border-width: 2px; box-shadow: var(--shadow-strong); }
+  .dose-item.is-resolved { opacity: 0.5; border-style: dashed; }
+  .dose-main { display: flex; align-items: flex-start; gap: 10px; }
+  .dose-accent { width: 5px; border-radius: 4px; align-self: stretch; flex-shrink: 0; }
+  .dose-form-icon { font-size: 18px; flex-shrink: 0; }
+  .dose-text { display: flex; flex-direction: column; gap: 2px; }
+  .dose-name { font-weight: 700; font-size: 14.5px; }
+  .dose-time { font-size: 12.5px; color: var(--muted); }
+  .dose-hint { font-size: 12px; color: var(--primary-dark); font-weight: 600; }
+  .dose-actions { display: flex; gap: 6px; }
+  .pill { font-size: 12px; font-weight: 700; padding: 7px 13px; border-radius: 999px; border: 2px solid var(--black); cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .pill.upcoming { background: var(--white); color: var(--muted); cursor: default; border-style: dashed; }
+  .pill.take { background: var(--primary); color: var(--white); }
+  .pill.skip { background: var(--white); color: var(--conf-low-text); border-color: var(--conf-low-text); }
+  .pill.taken-tag { background: var(--conf-high-bg); color: var(--conf-high-text); border-color: var(--conf-high-text); cursor: default; }
+  .pill.skipped-tag { background: var(--conf-low-bg); color: var(--conf-low-text); border-color: var(--conf-low-text); cursor: default; }
+
+  .empty-state { text-align: center; padding: 44px 20px; }
+  .empty-state .icon { font-size: 34px; margin-bottom: 8px; }
+  .empty-state p { color: var(--muted); margin: 6px 0 16px; }
+  .demo-toggle { text-align: center; margin-top: 18px; }
+
+  /* ---------- Tips: явный отдельный сегмент ---------- */
+  .tips-section { margin-top: 48px; }
+  .tips-heading { font-size: 18px; margin-bottom: 4px; }
+  .tips-sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tip-card-v3 { display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; border: 2px solid var(--black); background: var(--white); box-shadow: var(--shadow-strong); }
+  .tip-image { width: 100%; aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; font-size: 44px; }
+  .tip-image.t1 { background: linear-gradient(135deg, var(--card-blue), #8FD3E8); }
+  .tip-image.t2 { background: linear-gradient(135deg, var(--primary-light), var(--primary)); }
+  .tip-content { padding: 14px 16px 16px; }
+  .tip-cat { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+  .tip-content strong { display: block; font-size: 14.5px; margin-bottom: 6px; line-height: 1.3; }
+  .tip-content .tip-read { font-size: 13px; }
+
+  /* ---------- ANALYTICS ---------- */
+  .stats-row { display: flex; gap: 14px; margin-bottom: 26px; }
+  .stat-card { flex: 1; background: var(--white); border: 1.5px solid var(--black); border-radius: 18px; box-shadow: var(--shadow-soft); padding: 16px 18px; }
+  .stat-card.accent { background: var(--primary-light); border-width: 2px; box-shadow: var(--shadow-strong); }
+  .stat-value { font-family: 'Epilogue', sans-serif; font-weight: 900; font-size: 28px; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 4px; }
+  .timeline-card .timeline-name { font-weight: 700; font-size: 15px; }
+  .timeline-remaining { display: flex; justify-content: space-between; align-items: baseline; margin: 8px 0 10px; }
+  .timeline-remaining .big { font-family: 'Epilogue', sans-serif; font-weight: 800; font-size: 19px; }
+  .timeline-remaining .small { font-size: 12px; color: var(--muted); }
+  .progress-track { height: 8px; background: var(--off-white); border: 1.5px solid var(--black); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); }
+
+  /* ---------- MEDICATIONS ---------- */
+  .seg-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .seg-tab { flex: 1; text-align: center; padding: 9px; border-radius: 12px; border: 1.5px solid var(--black); background: var(--white); font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .seg-tab.is-active { background: var(--primary-light); border-width: 2px; }
+  .med-card { display: flex; gap: 0; padding: 0; overflow: hidden; }
+  .med-accent { width: 6px; flex-shrink: 0; }
+  .med-body { padding: 18px 20px; flex: 1; }
+  .med-name-row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .med-name { font-weight: 700; font-size: 16px; }
+  .med-meta { font-size: 13px; color: var(--body-text); margin-top: 4px; }
+  .med-instructions { font-size: 12.5px; color: var(--primary-dark); margin-top: 6px; font-weight: 600; }
+  .med-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(26,28,26,0.12); font-size: 13px; }
+  .med-info-grid .label { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .02em; margin-bottom: 2px; }
+  .med-actions-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .med-details { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(26,28,26,0.12); font-size: 13px; color: var(--body-text); display: none; }
+  .med-details.is-shown { display: block; }
+  .med-details .label { font-weight: 700; color: var(--black); display: block; margin-top: 6px; }
+  .med-details .disclaimer-sm { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  /* ---------- PRESCRIPTIONS ---------- */
+  .rx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .rx-date { font-size: 12px; color: var(--muted); }
+  .rx-type { font-weight: 700; font-size: 15px; margin-top: 2px; }
+  .rx-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .rx-status.processed { background: var(--conf-high-bg); color: var(--conf-high-text); }
+  .rx-status.failed { background: var(--conf-low-bg); color: var(--conf-low-text); }
+  .rx-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(26,28,26,0.12); font-size: 13px; }
+  .rx-meta-grid .label { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .02em; margin-bottom: 2px; }
+  .rx-alert { background: var(--primary-light); border: 2px solid var(--black); border-radius: 12px; padding: 11px 14px; margin-bottom: 16px; font-size: 13.5px; font-weight: 700; color: var(--primary-dark); }
+  .rx-meds-list { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(26,28,26,0.12); }
+  .rx-meds-list .label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 8px; }
+  .rx-med-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13.5px; border-bottom: 1px dashed rgba(26,28,26,0.15); }
+  .rx-med-row:last-child { border-bottom: none; }
+  .rx-med-icon { font-size: 16px; flex-shrink: 0; }
+  .rx-med-name { flex: 1; font-weight: 600; }
+  .rx-med-dose { color: var(--muted); font-size: 12.5px; }
+
+  /* ---------- HISTORY ---------- */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+  .filter-chip { font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 999px; border: 1.5px solid var(--black); background: var(--white); cursor: pointer; font-family: 'Inter', sans-serif; }
+  .filter-chip.is-active { background: var(--black); color: var(--white); border-width: 2px; }
+  .filter-select { font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; padding: 6px 10px; border-radius: 999px; border: 1.5px solid var(--black); background: var(--white); }
+  .history-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12px; color: var(--muted); }
+  .history-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid rgba(26,28,26,0.1); font-size: 14px; gap: 10px; }
+  .history-row:last-child { border-bottom: none; }
+  .history-date { color: var(--muted); width: 80px; flex-shrink: 0; font-size: 13px; }
+  .history-name { flex: 1; font-weight: 600; }
+  .status-tag { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .status-tag.taken { background: var(--conf-high-bg); color: var(--conf-high-text); }
+  .status-tag.missed { background: var(--conf-low-bg); color: var(--conf-low-text); }
+  .status-tag.skipped { background: var(--conf-medium-bg); color: var(--conf-medium-text); }
+
+  /* ---------- OVERLAY ---------- */
+  .overlay { position: fixed; inset: 0; background: rgba(26,28,26,0.55); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+  .overlay.is-hidden { display: none; }
+  .sheet { background: var(--off-white); width: 100%; max-width: 780px; max-height: 88vh; overflow-y: auto; border: 3px solid var(--black); border-radius: 24px; box-shadow: 6px 6px 0 var(--dark); padding: 28px; position: relative; }
+  .sheet-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--black); background: var(--white); cursor: pointer; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .step { display: none; }
+  .step.is-active { display: block; }
+  .sheet-title { font-size: 19px; margin-bottom: 6px; padding-right: 30px; }
+  .sheet-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 20px; }
+  .doc-type-badge { display: inline-block; font-size: 11.5px; font-weight: 700; background: var(--card-blue); border: 1.5px solid var(--black); border-radius: 999px; padding: 3px 10px; margin-bottom: 14px; }
+  .doc-meta-card { margin-bottom: 16px; font-size: 13.5px; }
+  .doc-meta-card .heading { font-size: 11.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+  .doc-meta-card div + div { margin-top: 4px; }
+
+  .choice-card { display: flex; align-items: center; gap: 14px; padding: 18px; margin-bottom: 14px; border: 2px solid var(--black); border-radius: 16px; background: var(--white); cursor: pointer; box-shadow: var(--shadow-strong); }
+  .choice-card:hover { background: var(--primary-light); }
+  .choice-icon { font-size: 28px; }
+  .choice-text strong { display: block; font-size: 15px; }
+  .choice-text span { font-size: 13px; color: var(--muted); }
+  .manual-link { display: block; text-align: center; margin: 6px 0 4px; font-size: 13.5px; }
+  .demo-link { display: block; text-align: center; margin-top: 18px; font-size: 12px; color: var(--muted); }
+
+  .loading-box, .error-box { text-align: center; padding: 44px 10px; }
+  .spinner { width: 44px; height: 44px; border: 4px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; margin: 0 auto 18px; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-icon { font-size: 38px; margin-bottom: 10px; }
+
+  .med-extract-card { border: 1.5px solid var(--black); border-radius: 16px; padding: 20px; margin-bottom: 16px; background: var(--white); position: relative; }
+  .extract-name-field input { width: 100%; font-family: 'Epilogue', sans-serif; font-weight: 700; font-size: 17px; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--black); background: #F1EEE8; margin-top: 8px; }
+  .extract-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .extract-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .extract-row label { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .conf-indicator { display: flex; align-items: center; gap: 6px; }
+  .conf-label-text { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .extract-card-field { margin-bottom: 4px; }
+  .extract-card-field input, .extract-card-field select { width: 100%; font-family: 'Inter', sans-serif; font-size: 15px; padding: 11px 13px; border-radius: 10px; border: 1.5px solid var(--black); background: #F1EEE8; }
+  .extract-card-field input.is-invalid { border-color: var(--conf-low-text); background: var(--conf-low-bg); }
+  .extract-card-field input::placeholder { color: var(--muted); }
+  .field-hint { font-size: 11.5px; color: var(--conf-low-text); font-weight: 700; margin-top: 5px; }
+  .remove-card-btn { position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--black); background: var(--white); cursor: pointer; font-size: 13px; font-weight: 700; line-height: 1; }
+  .chip { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+  .chip.high { background: var(--conf-high-bg); color: var(--conf-high-text); }
+  .chip.medium { background: var(--conf-medium-bg); color: var(--conf-medium-text); }
+  .chip.low { background: var(--conf-low-bg); color: var(--conf-low-text); }
+
+  .warnings-box { background: var(--conf-medium-bg); border: 1.5px solid var(--black); border-left: 5px solid var(--conf-medium-text); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; font-size: 13px; color: var(--conf-medium-text); }
+  .warnings-box strong { display: block; margin-bottom: 4px; color: var(--black); font-size: 14px; }
+
+  .original-toggle { font-size: 13px; color: var(--primary-dark); font-weight: 700; cursor: pointer; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--black); border-radius: 999px; padding: 8px 15px; }
+  .original-preview { border: 2px dashed var(--muted); border-radius: 14px; padding: 24px; text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 18px; display: none; }
+  .original-preview.is-shown { display: block; }
+  .add-more-row { text-align: center; margin-bottom: 18px; }
+
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 7px; }
+  .form-field .req { color: var(--conf-low-text); }
+  .form-field input, .form-field select { width: 100%; font-family: 'Inter', sans-serif; font-size: 14px; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--black); background: var(--white); }
+  .form-field input.is-invalid { border-color: var(--conf-low-text); background: var(--conf-low-bg); }
+
+  .timing-card { border: 1.5px solid var(--black); border-radius: 16px; padding: 18px; margin-bottom: 16px; background: var(--white); }
+  .timing-name { font-weight: 700; margin-bottom: 12px; }
+  .time-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .time-row input[type="time"], .time-row input[type="date"] { font-family: 'Inter', sans-serif; padding: 8px 11px; border-radius: 10px; border: 1.5px solid var(--black); background: #F1EEE8; }
+  .time-row-label { font-size: 12px; color: var(--muted); width: 100%; margin-bottom: 2px; }
+  .disclaimer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.4; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .sheet-actions .btn { flex: 1; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: var(--white); padding: 12px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 4px 4px 0 var(--primary); z-index: 60; opacity: 0; transition: opacity .2s ease; max-width: 90vw; text-align: center; }
+  .toast.is-shown { opacity: 1; }
+
+  @media (max-width: 520px) {
+    .extract-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 700px) {
+    .stats-row { flex-direction: column; }
+    .tips-grid { grid-template-columns: 1fr; }
+    .tabs { display: none; }
+    .hamburger-btn { display: flex; }
+    .dose-actions { width: 100%; justify-content: flex-end; }
+    .med-info-grid, .rx-meta-grid { grid-template-columns: 1fr; }
+    .topbar { padding: 12px 14px; gap: 8px; }
+    .topbar-right { gap: 6px; }
+    .logo-full { display: none; }
+    .logo-text { display: inline; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="logo" onclick="switchTab('dashboard')" aria-label="На головну">
+    <svg class="logo-full" width="153" height="24" viewBox="0 0 153 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.6983 19.2503C20.1567 19.4084 21.1641 20.2208 21.6162 20.554C25.1021 23.1228 30.1558 23.217 33.8565 21.0531C34.7192 20.5482 35.445 19.87 36.3184 19.3988C36.5105 19.2945 36.7785 19.4276 36.96 19.514C37.3722 20.0788 36.9695 20.498 36.5332 20.8782C32.1728 24.5235 26.2904 25.0213 21.3457 22.1341C20.608 21.7029 19.0569 20.8109 19.1153 19.8284C19.2517 19.4874 19.3667 19.4598 19.6983 19.2503ZM51.376 0.0335215C53.8768 -0.143391 57.7047 0.275654 55.7178 3.85383C55.3144 4.5798 54.2737 4.73821 53.4756 4.88997C52.8865 10.1953 50.6241 13.7733 45.3653 15.4398C42.1123 16.4993 38.5697 16.2046 35.5362 14.6234C32.7416 13.1813 30.7451 10.5568 30.1016 7.47883C29.7676 5.95765 29.9667 2.87395 27.4483 3.70247C26.4799 4.02067 26.3432 6.20725 26.1944 7.05598C25.4994 11.0173 23.3267 13.463 19.7422 15.0726C18.6785 15.5141 17.5632 15.8185 16.4229 15.9808C13.2714 16.4045 9.54643 15.5089 7.04982 13.5345C4.08324 11.1881 3.26732 8.4569 2.78322 4.94465C2.05624 4.82557 1.3363 4.68206 0.746111 4.20247C-0.647944 3.12599 0.0249784 0.373697 1.82521 0.252272C3.51339 0.13863 5.29351 0.185243 6.98928 0.184889C9.8898 0.18778 12.7911 0.173544 15.6914 0.14192L48.2266 0.04817C49.0824 0.0449174 50.4703 0.0976563 51.376 0.0335215Z" fill="#2D2B2B"/>
+      <path d="M86.2598 11.9299C86.2598 12.6033 86.1298 13.2833 85.8698 13.9699C85.6164 14.6499 85.2264 15.2766 84.6998 15.8499C84.1798 16.4233 83.5164 16.8866 82.7098 17.2399C81.9098 17.5866 80.9598 17.7599 79.8598 17.7599C78.4131 17.7599 77.1731 17.4366 76.1398 16.7899C75.1131 16.1366 74.3264 15.2366 73.7798 14.0899C73.2398 12.9433 72.9698 11.6199 72.9698 10.1199C72.9698 8.61994 73.2398 7.29994 73.7798 6.15994C74.3264 5.01327 75.1131 4.1166 76.1398 3.46994C77.1731 2.82327 78.4131 2.49994 79.8598 2.49994C81.0598 2.49994 82.0831 2.70327 82.9298 3.10994C83.7831 3.51661 84.4664 4.04994 84.9798 4.70994C85.4998 5.36994 85.8598 6.07661 86.0598 6.82994C86.1931 7.34327 86.2598 7.83994 86.2598 8.31994H82.2098C82.2098 8.10661 82.1964 7.91994 82.1698 7.75994C82.1098 7.32661 81.9798 6.94994 81.7798 6.62994C81.5798 6.30994 81.3164 6.06327 80.9898 5.88994C80.6698 5.70994 80.2931 5.61994 79.8598 5.61994C79.3398 5.61994 78.8698 5.77327 78.4498 6.07994C78.0298 6.3866 77.6931 6.86994 77.4398 7.52994C77.1931 8.18994 77.0698 9.05327 77.0698 10.1199C77.0698 11.1799 77.1931 12.0433 77.4398 12.7099C77.6931 13.3766 78.0298 13.8666 78.4498 14.1799C78.8698 14.4933 79.3398 14.6499 79.8598 14.6499C80.2331 14.6499 80.5631 14.5833 80.8498 14.4499C81.1431 14.3099 81.3898 14.1166 81.5898 13.8699C81.7898 13.6233 81.9431 13.3366 82.0498 13.0099C82.1564 12.6766 82.2098 12.3166 82.2098 11.9299H86.2598ZM95.0773 17.4999V13.8399C95.0773 13.7333 95.0773 13.5733 95.0773 13.3599C95.0773 13.1399 95.0773 12.9199 95.0773 12.6999C95.0773 12.4733 95.0773 12.2999 95.0773 12.1799C95.0773 11.5066 94.9773 10.9733 94.7773 10.5799C94.5773 10.1866 94.1473 9.98994 93.4873 9.98994C93.0606 9.98994 92.7173 10.0766 92.4573 10.2499C92.1973 10.4233 92.0073 10.6733 91.8873 10.9999C91.7739 11.3266 91.7173 11.7199 91.7173 12.1799L90.9373 11.3799C90.9373 10.4066 91.1206 9.56994 91.4873 8.86994C91.8539 8.16327 92.3673 7.61994 93.0273 7.23994C93.6873 6.85327 94.4606 6.65994 95.3473 6.65994C96.6606 6.65994 97.6139 7.03994 98.2073 7.79994C98.8073 8.55994 99.1073 9.62327 99.1073 10.9899C99.1073 11.3299 99.1073 11.7533 99.1073 12.2599C99.1073 12.7599 99.1073 13.3733 99.1073 14.0999V17.4999H95.0773ZM87.6873 17.4999V1.86994H91.7173V17.4999H87.6873ZM100.468 17.4999V6.87994H104.458V17.4999H100.468ZM102.458 5.62994C101.864 5.62994 101.344 5.47661 100.898 5.16994C100.458 4.86327 100.238 4.42661 100.238 3.85994C100.238 3.28661 100.458 2.84994 100.898 2.54994C101.344 2.24327 101.864 2.08994 102.458 2.08994C103.051 2.08994 103.568 2.24327 104.008 2.54994C104.454 2.84994 104.678 3.28661 104.678 3.85994C104.678 4.43327 104.454 4.87327 104.008 5.17994C103.568 5.47994 103.051 5.62994 102.458 5.62994ZM110.037 1.86994V17.4999H106.067V1.86994H110.037ZM115.939 1.86994V17.4999H111.969V1.86994H115.939ZM126.591 17.4999H122.551V2.74994H128.201C129.321 2.74994 130.297 2.97327 131.131 3.41994C131.964 3.85994 132.611 4.46327 133.071 5.22994C133.531 5.9966 133.761 6.86327 133.761 7.82994C133.761 8.79661 133.531 9.67661 133.071 10.4699C132.611 11.2566 131.964 11.8866 131.131 12.3599C130.297 12.8266 129.321 13.0599 128.201 13.0599H126.591V17.4999ZM126.591 11.8899L124.771 10.0699H127.791C128.124 10.0699 128.434 9.98994 128.721 9.82994C129.014 9.66327 129.251 9.41327 129.431 9.07994C129.611 8.74661 129.701 8.32994 129.701 7.82994C129.701 7.32994 129.611 6.92661 129.431 6.61994C129.251 6.31327 129.014 6.09327 128.721 5.95994C128.434 5.81994 128.124 5.74994 127.791 5.74994H124.771L126.591 3.92994V11.8899ZM134.86 17.4999V6.87994H138.85V17.4999H134.86ZM136.85 5.62994C136.256 5.62994 135.736 5.47661 135.29 5.16994C134.85 4.86327 134.63 4.42661 134.63 3.85994C134.63 3.28661 134.85 2.84994 135.29 2.54994C135.736 2.24327 136.256 2.08994 136.85 2.08994C137.443 2.08994 137.96 2.24327 138.4 2.54994C138.846 2.84994 139.07 3.28661 139.07 3.85994C139.07 4.43327 138.846 4.87327 138.4 5.17994C137.96 5.47994 137.443 5.62994 136.85 5.62994ZM144.429 1.86994V17.4999H140.459V1.86994H144.429ZM150.331 1.86994V17.4999H146.361V1.86994H150.331Z" fill="#1A1C1A"/>
+    </svg>
+    <span class="logo-text">Chill Pill</span>
+  </button>
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-tab="dashboard">Сьогодні</button>
+    <button class="tab" data-tab="analytics">Аналітика</button>
+    <button class="tab" data-tab="medications">Препарати</button>
+    <button class="tab" data-tab="prescriptions">Рецепти</button>
+    <button class="tab" data-tab="history">Історія</button>
+  </nav>
+  <div class="topbar-right">
+    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Меню" aria-expanded="false">☰</button>
+    <button class="btn btn-primary" onclick="openAdd()">+ Додати</button>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <button class="mobile-nav-item is-active" data-tab="dashboard">Сьогодні</button>
+    <button class="mobile-nav-item" data-tab="analytics">Аналітика</button>
+    <button class="mobile-nav-item" data-tab="medications">Препарати</button>
+    <button class="mobile-nav-item" data-tab="prescriptions">Рецепти</button>
+    <button class="mobile-nav-item" data-tab="history">Історія</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="view-dashboard" class="view is-active">
+    <div class="greeting-row">
+      <h2 class="section-title">Доброго ранку 👋</h2>
+      <div class="section-sub" id="dashboard-sub">Сьогодні у вас 3 прийоми</div>
+    </div>
+
+    <div id="dose-list"></div>
+
+    <div id="dashboard-empty" class="card empty-state" style="display:none;">
+      <div class="icon" aria-hidden="true">💊</div>
+      <h3>Поки немає доданих курсів лікування</h3>
+      <p>Сфотографуйте рецепт — ми самі визначимо препарати та схему</p>
+      <button class="btn btn-primary" onclick="openAdd()">Додати лікування</button>
+    </div>
+
+    <div class="demo-toggle"><button class="btn-text" onclick="toggleEmptyDemo()">показати empty state ↔</button></div>
+
+    <div class="tips-section">
+      <h3 class="tips-heading">💡 Корисне</h3>
+      <div class="tips-sub">Короткі матеріали про лікування та звички</div>
+      <div class="tips-grid">
+        <div class="tip-card-v3">
+          <div class="tip-image t1" aria-hidden="true">⏰</div>
+          <div class="tip-content">
+            <div class="tip-cat">Звички</div>
+            <strong>Як не забувати про вечірній прийом</strong>
+            <button class="btn-text tip-read" onclick="showToast('Розділ статей з\\'явиться в наступній версії')">Читати →</button>
+          </div>
+        </div>
+        <div class="tip-card-v3">
+          <div class="tip-image t2" aria-hidden="true">🤔</div>
+          <div class="tip-content">
+            <div class="tip-cat">Поради</div>
+            <strong>Що робити, якщо пропустили дозу</strong>
+            <button class="btn-text tip-read" onclick="showToast('Розділ статей з\\'явиться в наступній версії')">Читати →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANALYTICS ============ -->
+  <section id="view-analytics" class="view">
+    <h2 class="section-title">Аналітика</h2>
+    <div class="section-sub">Як ви справляєтеся з лікуванням</div>
+
+    <div class="stats-row">
+      <div class="stat-card accent"><div class="stat-value">92%</div><div class="stat-label">дотримання за 30 днів</div></div>
+      <div class="stat-card"><div class="stat-value">14 🔥</div><div class="stat-label">днів поспіль</div></div>
+    </div>
+
+    <div class="section-sub" style="margin-top:6px;font-weight:700;color:var(--black);">Ваші курси лікування</div>
+    <div id="timeline-list"></div>
+  </section>
+
+  <!-- ============ MEDICATIONS ============ -->
+  <section id="view-medications" class="view">
+    <h2 class="section-title">Препарати</h2>
+    <div class="section-sub">Дозування, схема та інструкція прийому</div>
+    <div class="seg-tabs">
+      <button class="seg-tab is-active" data-sub="active" onclick="setMedsSubTab('active', this)">Активні</button>
+      <button class="seg-tab" data-sub="archived" onclick="setMedsSubTab('archived', this)">Архівовані</button>
+    </div>
+    <div id="med-list"></div>
+  </section>
+
+  <!-- ============ PRESCRIPTIONS ============ -->
+  <section id="view-prescriptions" class="view">
+    <h2 class="section-title">Рецепти</h2>
+    <div class="section-sub">Завантажені документи та що з них видобуто</div>
+    <div id="rx-list"></div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section id="view-history" class="view">
+    <h2 class="section-title">Історія прийомів</h2>
+    <div class="section-sub">Що, коли і чи було відмічено</div>
+
+    <div class="filter-bar">
+      <select class="filter-select" id="history-med-filter" onchange="renderHistory()"><option value="all">Усі препарати</option></select>
+      <button class="filter-chip" data-status="taken" onclick="setHistoryStatusFilter('taken', this)">Прийнято</button>
+      <button class="filter-chip" data-status="skipped" onclick="setHistoryStatusFilter('skipped', this)">Пропущено</button>
+      <button class="filter-chip" data-status="missed" onclick="setHistoryStatusFilter('missed', this)">Не відмічено</button>
+      <button class="btn-text" id="reset-filters-btn" onclick="resetHistoryFilters()" style="display:none;">Скинути фільтри</button>
+    </div>
+    <div class="history-meta" id="history-meta"></div>
+    <div class="card" id="history-card"><div id="history-list"></div></div>
+  </section>
+
+</main>
+
+<!-- ============ OVERLAY ============ -->
+<div id="overlay-add" class="overlay is-hidden">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeAdd()" aria-label="Закрити">×</button>
+
+    <div id="step-entry" class="step is-active">
+      <h3 class="sheet-title">Додати лікування</h3>
+      <div class="sheet-sub">Завантажте рецепт — ми визначимо препарати та складемо графік</div>
+      <div class="choice-card" onclick="triggerFileSelect()">
+        <div class="choice-icon" aria-hidden="true">📷</div>
+        <div class="choice-text"><strong>Сфотографувати або завантажити рецепт</strong><span>Фото з камери, з галереї або PDF</span></div>
+      </div>
+      <input type="file" id="rx-file-input" accept="image/*,application/pdf" capture="environment" style="display:none;" onchange="handleFileSelected()">
+      <a class="manual-link btn-text" href="javascript:void(0)" onclick="goToStep('step-manual')" style="display:block;text-align:center;">Ввести вручну, без рецепта</a>
+      <a class="demo-link" href="javascript:void(0)" onclick="goToStep('step-error')">демо: показати екран помилки розпізнавання</a>
+    </div>
+
+    <div id="step-loading" class="step">
+      <div class="loading-box"><div class="spinner"></div>
+        <h3 class="sheet-title" style="text-align:center;">Розпізнаємо рецепт…</h3>
+        <div class="sheet-sub" id="loading-sub" style="text-align:center;">Це займе кілька секунд</div>
+      </div>
+    </div>
+
+    <div id="step-error" class="step">
+      <div class="error-box">
+        <div class="error-icon" aria-hidden="true">⚠️</div>
+        <h3 class="sheet-title" style="text-align:center;">Не вдалося розпізнати документ</h3>
+        <div class="sheet-sub" style="text-align:center;">Можливо, фото розмите або це не рецепт. Спробуйте інше фото або введіть дані вручну.</div>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="goToStep('step-entry')">Інше фото</button>
+        <button class="btn btn-primary" onclick="goToStep('step-manual')">Ввести вручну</button>
+      </div>
+    </div>
+
+    <div id="step-review" class="step">
+      <h3 class="sheet-title">Перевірте дані</h3>
+      <span class="doc-type-badge">Тип документа: <span id="doc-type-label">—</span></span>
+      <div class="sheet-sub">Поля з низькою впевненістю позначені — заповніть їх або перевірте за оригіналом</div>
+      <button class="original-toggle" onclick="toggleOriginal()">👁 Переглянути оригінал документа</button>
+      <div id="original-preview" class="original-preview">📄 перегляд оригіналу (демо) — на реальному екрані тут буде завантажене фото рецепта</div>
+      <div class="card doc-meta-card">
+        <div class="heading">Дані документа (розпізнано)</div>
+        <div>Клініка: <strong id="doc-meta-clinic">—</strong></div>
+        <div>Лікар: <strong id="doc-meta-doctor">—</strong></div>
+        <div>Дата видачі: <strong id="doc-meta-issued">—</strong></div>
+      </div>
+      <div id="warnings-box" class="warnings-box"><strong>⚠ Перевірте перед збереженням</strong><span id="warnings-text"></span></div>
+      <div id="review-meds"></div>
+      <div class="add-more-row"><button class="btn btn-secondary btn-sm" onclick="addBlankMed()">+ Додати препарат вручну</button></div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="goToStep('step-entry')">← інше фото</button>
+        <button class="btn btn-primary" onclick="confirmReview()">Далі: час прийому</button>
+      </div>
+    </div>
+
+    <div id="step-manual" class="step">
+      <h3 class="sheet-title">Ввести вручну</h3>
+      <div class="sheet-sub">Заповніть дані про препарат</div>
+      <div class="form-field"><label>Назва препарату <span class="req">*</span></label><input id="man-name" placeholder="наприклад, Ібупрофен"></div>
+      <div class="form-field"><label>Дозування <span class="req">*</span></label><input id="man-dosage" placeholder="наприклад, 200 мг"></div>
+      <div class="form-field"><label>Форма випуску</label>
+        <select id="man-form"><option value="таблетки">таблетки</option><option value="краплі">краплі</option><option value="капсули">капсули</option><option value="ін'єкція">ін'єкція</option></select>
+      </div>
+      <div class="form-field"><label>Частота прийому <span class="req">*</span></label>
+        <select id="man-freq" onchange="toggleFreqOther('man')">
+          <option value="1 раз на день">1 раз на день</option>
+          <option value="2 рази на день" selected>2 рази на день</option>
+          <option value="3 рази на день">3 рази на день</option>
+          <option value="За потребою">За потребою</option>
+          <option value="other">Інше (вказати самостійно)</option>
+        </select>
+        <input id="man-freq-other" style="display:none;margin-top:8px;" placeholder="наприклад, через день">
+      </div>
+      <div class="form-field"><label>Тривалість курсу (днів, залиште порожнім якщо постійно)</label><input id="man-duration" placeholder="наприклад, 10"></div>
+      <div class="form-field"><label>Особливі вказівки (необов'язково)</label><input id="man-instructions" placeholder="наприклад, після їжі"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="goToStep('step-entry')">← назад</button>
+        <button class="btn btn-primary" onclick="confirmManual()">Далі: час прийому</button>
+      </div>
+    </div>
+
+    <div id="step-edit" class="step">
+      <h3 class="sheet-title">Редагувати препарат</h3>
+      <div class="sheet-sub">Наприклад, лікар змінив дозування чи частоту прийому</div>
+      <div class="form-field"><label>Назва препарату <span class="req">*</span></label><input id="edit-name"></div>
+      <div class="form-field"><label>Дозування <span class="req">*</span></label><input id="edit-dosage"></div>
+      <div class="form-field"><label>Форма випуску</label>
+        <select id="edit-form"><option value="таблетки">таблетки</option><option value="краплі">краплі</option><option value="капсули">капсули</option><option value="ін'єкція">ін'єкція</option></select>
+      </div>
+      <div class="form-field"><label>Частота прийому <span class="req">*</span></label>
+        <select id="edit-freq" onchange="toggleFreqOther('edit')">
+          <option value="1 раз на день">1 раз на день</option>
+          <option value="2 рази на день">2 рази на день</option>
+          <option value="3 рази на день">3 рази на день</option>
+          <option value="За потребою">За потребою</option>
+          <option value="other">Інше (вказати самостійно)</option>
+        </select>
+        <input id="edit-freq-other" style="display:none;margin-top:8px;" placeholder="наприклад, через день">
+      </div>
+      <div class="form-field"><label>Тривалість курсу (днів, залиште порожнім якщо постійно)</label><input id="edit-duration"></div>
+      <div class="form-field"><label>Особливі вказівки (необов'язково)</label><input id="edit-instructions"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="closeAdd()">Скасувати</button>
+        <button class="btn btn-primary" onclick="confirmEdit()">Далі: час прийому</button>
+      </div>
+    </div>
+
+    <div id="step-timing" class="step">
+      <h3 class="sheet-title">О котрій приймати?</h3>
+      <div class="sheet-sub">Ми підставили звичний час — виправте, якщо потрібно</div>
+      <div id="timing-list"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" onclick="closeAdd()">Скасувати</button>
+        <button class="btn btn-primary" onclick="finalizeAdd()">Підтвердити та створити графік</button>
+      </div>
+      <div class="disclaimer">Перевірте дані перед збереженням — це не замінює консультацію лікаря.</div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const palette = ['#A8D1DB', '#F9C66E', '#B0D6B2', '#F37762', '#A6A5C7'];
+  function colorForMed(id) { return palette[id % palette.length]; }
+  function iconForForm(form) { return { 'таблетки': '💊', 'краплі': '💧', 'капсули': '💊', "ін'єкція": '💉' }[form] || '💊'; }
+
+  let medIdCounter = 4;
+  let doseIdCounter = 200;
+  let rxIdCounter = 3;
+  let medsSubTab = 'active';
+
+  let state = {
+    medications: [
+      { id: 1, name: 'Метопролол', dosage: '50 мг', form: 'таблетки', frequency: '2 рази на день', instructions: 'Приймати після їжі', sideEffects: 'Можливі: запаморочення, втома, сповільнення серцебиття. Якщо симптоми сильні — зверніться до лікаря.', startDate: '1 червня', durationDays: null, elapsedDays: 0, status: 'active' },
+      { id: 2, name: 'Вітамін D3', dosage: '2000 МЕ', form: 'краплі', frequency: '1 раз на день', instructions: '', sideEffects: '', startDate: '1 червня', durationDays: null, elapsedDays: 0, status: 'active' },
+      { id: 3, name: 'Амоксицилін', dosage: '500 мг', form: 'таблетки', frequency: '2 рази на день', instructions: 'Після їжі', sideEffects: 'Можливі: нудота, висип, розлад шлунку.', startDate: '18 червня', durationDays: 7, elapsedDays: 6, status: 'active' }
+    ],
+    doses: [
+      { id: 101, medId: 1, name: 'Метопролол 50 мг', time: '08:00', status: 'taken' },
+      { id: 102, medId: 2, name: 'Вітамін D3', time: '09:00', status: 'due' },
+      { id: 103, medId: 1, name: 'Метопролол 50 мг', time: '20:00', status: 'upcoming' },
+      { id: 104, medId: 3, name: 'Амоксицилін 500 мг', time: '21:00', status: 'upcoming' }
+    ],
+    history: [
+      { date: '21 червня', name: 'Метопролол 50 мг', status: 'taken' },
+      { date: '21 червня', name: 'Вітамін D3', status: 'taken' },
+      { date: '20 червня', name: 'Метопролол 50 мг', status: 'taken' },
+      { date: '20 червня', name: 'Вітамін D3', status: 'missed' },
+      { date: '19 червня', name: 'Метопролол 50 мг', status: 'taken' }
+    ],
+    prescriptions: [
+      { id: 1, uploadedAt: '1 червня', type: 'printed', status: 'processed', meds: [{ name: 'Метопролол', dosage: '50 мг' }, { name: 'Вітамін D3', dosage: '2000 МЕ' }], clinic: 'Клініка «Добробут»', doctor: 'Ірина Коваленко', doctorSpecialty: 'кардіолог', issuedAt: '1 червня, 10:24', code: '' },
+      { id: 2, uploadedAt: '10 червня', type: 'electronic_pdf', status: 'processed', meds: [{ name: 'Амоксицилін', dosage: '500 мг' }], clinic: 'Поліклініка №3', doctor: 'Наталія Петренко', doctorSpecialty: "сімейний лікар", issuedAt: '10 червня, 14:02', code: '4815-1623-0942-3343' }
+    ]
+  };
+
+  let emptyDemo = false;
+  let historyStatusFilter = 'all';
+  let extractedMeds = [];
+  let blankCounter = 0;
+
+  const EXTRACTION_SYSTEM_PROMPT = `Ты — система извлечения структурированных данных, встроенная в приложение для управления приёмом лекарств. Твоя единственная задача — прочитать изображение или документ медицинского рецепта и извлечь препараты, дозировки, схему приёма и метаданные документа в строгом JSON-формате.
+
+Ты не даёшь медицинских консультаций и не используешь общие медицинские знания, чтобы "дополнить" или "исправить" то, что не можешь чётко прочитать в исходном документе.
+
+КРИТИЧЕСКИЕ ПРАВИЛА:
+1. Извлекай только то, что видно в документе. Никогда не подставляй "типичную" дозу, если фактически написанная доза нечитаема или отсутствует — помечай поле как неуверенное или null.
+2. Если не уверена в поле — честно отражай это через confidence. Никогда не угадывай молча.
+3. Если документ не является рецептом, либо в нём нет извлекаемой информации — верни пустой массив medications и объясни почему в extraction_warnings.
+4. Выводи ТОЛЬКО JSON-объект по схеме ниже. Без markdown-форматирования, без преамбулы.
+5. Сохраняй оригинальное написание названия препарата ровно так, как в документе.
+6. Если в документе несколько препаратов — верни все как отдельные элементы массива.
+
+ПРАВИЛА CONFIDENCE: "high" — печатный/типографский текст или полностью разборчивый почерк. "medium" — разборчиво, но есть небольшая неоднозначность. "low" — нечитаемо, отсутствует, противоречиво, либо вывод косвенный.
+overall_confidence препарата = наименьшее значение среди name_confidence, dosage_confidence, frequency_confidence, duration_confidence.
+
+СХЕМА ВЫВОДА:
+{
+  "document_type": "handwritten | printed | electronic_pdf",
+  "document_metadata": {
+    "clinic": "string или null",
+    "doctor_name": "string или null",
+    "doctor_specialty": "string или null",
+    "issued_at": "string или null"
+  },
+  "medications": [
+    {
+      "name": "string",
+      "name_confidence": "high | medium | low",
+      "dosage": "string или null",
+      "dosage_confidence": "high | medium | low",
+      "form": "string или null",
+      "frequency_human": "строка как в источнике",
+      "frequency_confidence": "high | medium | low",
+      "frequency_structured": { "times_per_day": "число или null", "specific_times": ["string"] },
+      "duration_days": "число или null",
+      "duration_confidence": "high | medium | low",
+      "special_instructions": "string или null",
+      "overall_confidence": "high | medium | low"
+    }
+  ],
+  "extraction_warnings": ["string"]
+}
+
+Не добавляй никакого текста до или после JSON-объекта.`;
+  let pendingMeds = [];
+  let pendingFromAI = false;
+  let pendingIsEdit = false;
+  let editingMedId = null;
+
+  const docTypeLabels = { handwritten: 'Рукописний', printed: 'Друкований', electronic_pdf: 'Електронний' };
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab, .mobile-nav-item').forEach(el => el.classList.toggle('is-active', el.dataset.tab === name));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('is-active'));
+    document.getElementById('view-' + name).classList.add('is-active');
+    document.getElementById('mobile-nav').classList.remove('is-open');
+    document.getElementById('hamburger-btn').setAttribute('aria-expanded', 'false');
+  }
+  document.querySelectorAll('.tab, .mobile-nav-item').forEach(el => {
+    el.addEventListener('click', () => switchTab(el.dataset.tab));
+  });
+  function toggleMobileNav() {
+    const nav = document.getElementById('mobile-nav');
+    const btn = document.getElementById('hamburger-btn');
+    const isOpen = nav.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  function statusLabel(status) { return { upcoming: 'Очікує', due: 'Зараз', taken: 'Прийнято', skipped: 'Пропущено', missed: 'Не відмічено' }[status] || status; }
+  function defaultTimesFor(freqText) {
+    if (/3\s*раз/.test(freqText)) return ['08:00', '14:00', '20:00'];
+    if (/2\s*раз/.test(freqText)) return ['08:00', '20:00'];
+    return ['09:00'];
+  }
+  function periodFor(timeStr) {
+    const hour = parseInt(timeStr.split(':')[0], 10);
+    if (isNaN(hour)) return 'Ранок';
+    if (hour < 12) return 'Ранок'; if (hour < 17) return 'День'; return 'Вечір';
+  }
+
+  function renderDashboard() {
+    const box = document.getElementById('dose-list');
+    const emptyBox = document.getElementById('dashboard-empty');
+    const sub = document.getElementById('dashboard-sub');
+    if (emptyDemo || state.doses.length === 0) { box.innerHTML = ''; emptyBox.style.display = 'block'; sub.textContent = 'Немає запланованих прийомів'; return; }
+    emptyBox.style.display = 'none';
+    sub.textContent = 'Сьогодні у вас ' + state.doses.length + ' прийоми';
+
+    const groups = { 'Ранок': [], 'День': [], 'Вечір': [] };
+    state.doses.forEach(d => groups[periodFor(d.time)].push(d));
+    let html = '';
+    ['Ранок', 'День', 'Вечір'].forEach(period => {
+      if (groups[period].length === 0) return;
+      html += `<div class="dose-group-label">${period}</div><div class="dose-list">`;
+      groups[period].forEach(d => {
+        const med = state.medications.find(m => m.id === d.medId);
+        const dotColor = med ? colorForMed(med.id) : '#ccc';
+        const formIcon = med ? iconForForm(med.form) : '💊';
+        const hint = med && med.instructions ? `<div class="dose-hint">🍽 ${med.instructions}</div>` : '';
+        let actions;
+        if (d.status === 'due') {
+          actions = `<div class="dose-actions"><button class="pill take" onclick="markDose(${d.id}, 'taken')">Прийняв</button><button class="pill skip" onclick="markDose(${d.id}, 'skipped')">Пропустив</button></div>`;
+        } else if (d.status === 'upcoming') {
+          actions = `<span class="pill upcoming">Очікує</span>`;
+        } else {
+          actions = `<span class="pill ${d.status === 'taken' ? 'taken-tag' : 'skipped-tag'}">${statusLabel(d.status)}</span>`;
+        }
+        const resolved = (d.status === 'taken' || d.status === 'skipped') ? 'is-resolved' : '';
+        html += `<div class="dose-item ${d.status === 'due' ? 'is-due' : ''} ${resolved}">
+          <div class="dose-main">
+            <span class="dose-accent" style="background:${dotColor};" aria-hidden="true"></span>
+            <span class="dose-form-icon" aria-hidden="true">${formIcon}</span>
+            <div class="dose-text"><div class="dose-name">${d.name}</div><div class="dose-time">${d.time}</div>${hint}</div>
+          </div>${actions}</div>`;
+      });
+      html += `</div>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function markDose(id, newStatus) {
+    const dose = state.doses.find(d => d.id === id);
+    if (!dose || dose.status !== 'due') return;
+    dose.status = newStatus;
+    state.history.unshift({ date: 'Сьогодні', name: dose.name, status: newStatus });
+    renderAll();
+    showToast(newStatus === 'taken' ? 'Прийом відмічено ✓' : 'Пропуск відмічено');
+  }
+  function toggleEmptyDemo() { emptyDemo = !emptyDemo; renderDashboard(); }
+
+  function renderTimeline() {
+    const box = document.getElementById('timeline-list');
+    const active = state.medications.filter(m => m.status === 'active');
+    if (active.length === 0) { box.innerHTML = `<div class="card empty-state"><p>Поки немає активних курсів</p></div>`; return; }
+    box.innerHTML = active.map(m => {
+      if (m.durationDays) {
+        const remaining = Math.max(m.durationDays - (m.elapsedDays || 0), 0);
+        const pct = Math.min(100, Math.round(((m.elapsedDays || 0) / m.durationDays) * 100));
+        return `<div class="card timeline-card">
+          <div class="timeline-name">${m.name}</div>
+          <div class="timeline-remaining"><span class="big">Залишилось ${remaining} з ${m.durationDays} днів</span><span class="small">почато ${m.startDate}</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+        </div>`;
+      }
+      return `<div class="card timeline-card">
+        <div class="timeline-name">${m.name}</div>
+        <div class="timeline-remaining"><span class="big">Постійний прийом ♾</span><span class="small">почато ${m.startDate}</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  function setMedsSubTab(sub, btn) {
+    medsSubTab = sub;
+    document.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    renderMedications();
+  }
+
+  function renderMedications() {
+    const box = document.getElementById('med-list');
+    const list = state.medications.filter(m => m.status === medsSubTab);
+    if (list.length === 0) {
+      box.innerHTML = `<div class="card empty-state"><div class="icon" aria-hidden="true">💊</div><p>${medsSubTab === 'active' ? 'Поки немає активних препаратів' : 'Архів порожній'}</p></div>`;
+      return;
+    }
+    box.innerHTML = list.map(m => {
+      const dur = m.durationDays ? `${Math.max(m.durationDays - (m.elapsedDays || 0), 0)} з ${m.durationDays} днів` : 'постійно';
+      const hasDetails = m.instructions || m.sideEffects;
+      const actions = m.status === 'active'
+        ? `<button class="btn btn-secondary btn-sm" onclick="openEditMed(${m.id})">Редагувати</button><button class="btn btn-secondary btn-sm" onclick="archiveMed(${m.id})">Архівувати</button>`
+        : `<button class="btn btn-secondary btn-sm" onclick="restoreMed(${m.id})">Повернути в активні</button>`;
+      return `<div class="card med-card">
+        <div class="med-accent" style="background:${colorForMed(m.id)};"></div>
+        <div class="med-body">
+          <div class="med-name-row"><span class="med-name">${iconForForm(m.form)} ${m.name}</span></div>
+          <div class="med-meta">${m.dosage} · ${m.frequency}</div>
+          ${m.instructions ? `<div class="med-instructions">🍽 ${m.instructions}</div>` : ''}
+          <div class="med-info-grid">
+            <div><span class="label">Почато</span>${m.startDate}</div>
+            <div><span class="label">${m.durationDays ? 'Залишилось' : 'Тривалість'}</span>${dur}</div>
+          </div>
+          <div class="med-actions-row">${actions}</div>
+          ${hasDetails ? `
+          <button class="btn-text" id="med-toggle-${m.id}" onclick="toggleMedDetails(${m.id})" style="margin-top:12px;">Детальніше ▾</button>
+          <div class="med-details" id="details-${m.id}">
+            <span class="label">Інструкція із застосування</span>${m.instructions || 'інформація не вказана'}
+            <span class="label">Можливі побічні ефекти</span>${m.sideEffects || 'інформація відсутня'}
+            <div class="disclaimer-sm">Довідкова інформація, не замінює інструкцію виробника та консультацію лікаря.</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function toggleMedDetails(id) {
+    const box = document.getElementById('details-' + id);
+    const btn = document.getElementById('med-toggle-' + id);
+    box.classList.toggle('is-shown');
+    btn.textContent = box.classList.contains('is-shown') ? 'Згорнути ▴' : 'Детальніше ▾';
+  }
+
+  function archiveMed(id) {
+    const med = state.medications.find(m => m.id === id);
+    if (!med) return;
+    med.status = 'archived';
+    state.doses = state.doses.filter(d => !(d.medId === id && (d.status === 'due' || d.status === 'upcoming')));
+    renderAll();
+    showToast('Курс архівовано, незавершені дози на сьогодні знято');
+  }
+  function restoreMed(id) { const med = state.medications.find(m => m.id === id); if (med) med.status = 'active'; renderAll(); }
+
+  function openEditMed(id) {
+    const med = state.medications.find(m => m.id === id);
+    if (!med) return;
+    editingMedId = id;
+    document.getElementById('edit-name').value = med.name;
+    document.getElementById('edit-dosage').value = med.dosage;
+    document.getElementById('edit-form').value = med.form;
+    document.getElementById('edit-duration').value = med.durationDays || '';
+    document.getElementById('edit-instructions').value = med.instructions || '';
+    const freqSel = document.getElementById('edit-freq');
+    const options = Array.from(freqSel.options).map(o => o.value);
+    if (options.includes(med.frequency)) { freqSel.value = med.frequency; document.getElementById('edit-freq-other').style.display = 'none'; }
+    else { freqSel.value = 'other'; document.getElementById('edit-freq-other').style.display = 'block'; document.getElementById('edit-freq-other').value = med.frequency; }
+    document.getElementById('overlay-add').classList.remove('is-hidden');
+    goToStep('step-edit');
+  }
+
+  function confirmEdit() {
+    const name = document.getElementById('edit-name');
+    const dosage = document.getElementById('edit-dosage');
+    const form = document.getElementById('edit-form').value;
+    const freqSel = document.getElementById('edit-freq');
+    const freqOther = document.getElementById('edit-freq-other');
+    const freq = freqSel.value === 'other' ? freqOther.value.trim() : freqSel.value;
+    const duration = document.getElementById('edit-duration').value.trim();
+    const instructions = document.getElementById('edit-instructions').value.trim();
+    let valid = true;
+    name.classList.toggle('is-invalid', !name.value.trim());
+    dosage.classList.toggle('is-invalid', !dosage.value.trim());
+    freqOther.classList.toggle('is-invalid', freqSel.value === 'other' && !freq);
+    if (!name.value.trim() || !dosage.value.trim() || !freq) valid = false;
+    if (!valid) { showToast('Заповніть назву, дозування та частоту прийому'); return; }
+    pendingMeds = [{ name: name.value.trim(), dosage: dosage.value.trim(), form, frequency: freq, duration, instructions }];
+    pendingIsEdit = true;
+    renderTimingStep();
+    goToStep('step-timing');
+  }
+
+  function rxEndingSoon(meds) {
+    for (const entry of meds) {
+      const med = state.medications.find(m => m.name === entry.name && m.status === 'active');
+      if (med && med.durationDays) {
+        const remaining = med.durationDays - (med.elapsedDays || 0);
+        if (remaining <= 2) return remaining;
+      }
+    }
+    return null;
+  }
+  function remainingDaysPhrase(remaining) {
+    if (remaining <= 0) return 'Курс лікування завершується сьогодні';
+    if (remaining === 1) return 'Курс лікування закінчується через 1 день';
+    return `Курс лікування закінчується через ${remaining} дні`;
+  }
+
+  function renderPrescriptions() {
+    const box = document.getElementById('rx-list');
+    if (state.prescriptions.length === 0) { box.innerHTML = `<div class="card empty-state"><div class="icon" aria-hidden="true">📄</div><p>Поки немає завантажених рецептів</p></div>`; return; }
+    box.innerHTML = state.prescriptions.map(r => {
+      const remaining = rxEndingSoon(r.meds);
+      const alert = remaining !== null ? `<div class="rx-alert">⏳ ${remainingDaysPhrase(remaining)} — зверніть увагу, можливо знадобиться новий рецепт від лікаря</div>` : '';
+      return `<div class="card rx-card">
+        ${alert}
+        <div class="rx-top">
+          <div><div class="rx-date">${r.uploadedAt}</div><div class="rx-type">${docTypeLabels[r.type] || r.type}</div></div>
+          <span class="rx-status ${r.status}">${r.status === 'processed' ? 'опрацьовано' : 'помилка'}</span>
+        </div>
+        <div class="rx-meta-grid">
+          <div><span class="label">Клініка</span>${r.clinic || '—'}</div>
+          <div><span class="label">Лікар</span>${r.doctor ? r.doctor + ', ' + r.doctorSpecialty : '—'}</div>
+          <div><span class="label">Дата та час видачі</span>${r.issuedAt || '—'}</div>
+          <div><span class="label">Код електронного рецепта</span>${r.code || '—'}</div>
+        </div>
+        <div class="rx-meds-list">
+          <span class="label">Препарати з цього рецепта</span>
+          ${r.meds.map(m => `<div class="rx-med-row"><span class="rx-med-icon" aria-hidden="true">💊</span><span class="rx-med-name">${m.name}</span><span class="rx-med-dose">${m.dosage}</span></div>`).join('')}
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-secondary btn-sm" onclick="showToast('Перегляд оригіналу (демо)')">👁 Переглянути оригінал</button></div>
+      </div>`;
+    }).join('');
+  }
+
+
+  function populateHistoryMedFilter() {
+    const sel = document.getElementById('history-med-filter');
+    const names = Array.from(new Set(state.history.map(h => h.name)));
+    const current = sel.value || 'all';
+    sel.innerHTML = '<option value="all">Усі препарати</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+    sel.value = names.includes(current) ? current : 'all';
+  }
+  function setHistoryStatusFilter(status, btn) {
+    if (historyStatusFilter === status) {
+      historyStatusFilter = 'all';
+      btn.classList.remove('is-active');
+    } else {
+      historyStatusFilter = status;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('is-active'));
+      btn.classList.add('is-active');
+    }
+    renderHistory();
+  }
+  function resetHistoryFilters() {
+    historyStatusFilter = 'all';
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('is-active'));
+    document.getElementById('history-med-filter').value = 'all';
+    renderHistory();
+  }
+  function renderHistory() {
+    populateHistoryMedFilter();
+    const medFilter = document.getElementById('history-med-filter').value;
+    const filtered = state.history.filter(h => (historyStatusFilter === 'all' || h.status === historyStatusFilter) && (medFilter === 'all' || h.name === medFilter));
+    const meta = document.getElementById('history-meta');
+    const filtersActive = historyStatusFilter !== 'all' || medFilter !== 'all';
+    meta.innerHTML = `<span>Знайдено ${filtered.length} ${filtered.length === 1 ? 'запис' : 'записів'}</span>`;
+    document.getElementById('reset-filters-btn').style.display = filtersActive ? 'inline-block' : 'none';
+    const box = document.getElementById('history-list');
+    if (filtered.length === 0) { box.innerHTML = `<div class="empty-state"><p>За цими фільтрами нічого не знайдено</p></div>`; return; }
+    box.innerHTML = filtered.map(h => `<div class="history-row"><div class="history-date">${h.date}</div><div class="history-name">${h.name}</div><div class="status-tag ${h.status}">${statusLabel(h.status)}</div></div>`).join('');
+  }
+
+  function renderAll() { renderDashboard(); renderTimeline(); renderMedications(); renderPrescriptions(); renderHistory(); }
+
+  function currentStepId() { const el = document.querySelector('.step.is-active'); return el ? el.id : null; }
+  function isDirtyStep() { return ['step-review', 'step-manual', 'step-timing', 'step-edit'].includes(currentStepId()); }
+  function openAdd() { extractedMeds = []; pendingMeds = []; pendingIsEdit = false; editingMedId = null; document.getElementById('overlay-add').classList.remove('is-hidden'); goToStep('step-entry'); }
+  function closeAdd() {
+    if (isDirtyStep() && !window.confirm('Закрити без збереження? Введені дані буде втрачено.')) return;
+    document.getElementById('overlay-add').classList.add('is-hidden');
+    pendingIsEdit = false; editingMedId = null;
+  }
+  function goToStep(stepId) { document.querySelectorAll('.step').forEach(s => s.classList.remove('is-active')); document.getElementById(stepId).classList.add('is-active'); }
+  function toggleOriginal() { document.getElementById('original-preview').classList.toggle('is-shown'); }
+  function toggleFreqOther(prefix) {
+    const sel = document.getElementById(prefix + '-freq');
+    document.getElementById(prefix + '-freq-other').style.display = sel.value === 'other' ? 'block' : 'none';
+  }
+
+  function triggerFileSelect() {
+    document.getElementById('rx-file-input').click();
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function callExtractionAPI(base64Data, mediaType) {
+    const isPdf = mediaType === 'application/pdf';
+    const contentBlock = isPdf
+      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
+      : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } };
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: EXTRACTION_SYSTEM_PROMPT,
+        messages: [{
+          role: 'user',
+          content: [contentBlock, { type: 'text', text: 'Витягни дані з цього рецепта згідно інструкції.' }]
+        }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed: ' + response.status);
+    const data = await response.json();
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const cleaned = textBlocks.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned);
+  }
+
+  function applyExtractionResult(result) {
+    const meds = result.medications || [];
+    if (meds.length === 0) { goToStep('step-error'); return; }
+
+    extractedMeds = meds.map((m, idx) => ({
+      id: 'api' + idx,
+      name: m.name || '',
+      nameConf: m.name_confidence || 'low',
+      dosage: m.dosage || '',
+      dosageConf: m.dosage_confidence || 'low',
+      form: m.form || 'таблетки',
+      freq: m.frequency_human || '',
+      freqConf: m.frequency_confidence || 'low',
+      duration: (m.duration_days !== null && m.duration_days !== undefined) ? String(m.duration_days) : '',
+      durationConf: m.duration_confidence || 'low'
+    }));
+    renderReviewMeds();
+
+    document.getElementById('doc-type-label').textContent = docTypeLabels[result.document_type] || result.document_type || 'не визначено';
+    const meta = result.document_metadata || {};
+    document.getElementById('doc-meta-clinic').textContent = meta.clinic || 'не вказано';
+    document.getElementById('doc-meta-doctor').textContent = meta.doctor_name ? (meta.doctor_name + (meta.doctor_specialty ? ', ' + meta.doctor_specialty : '')) : 'не вказано';
+    document.getElementById('doc-meta-issued').textContent = meta.issued_at || 'не вказано';
+
+    const warnings = result.extraction_warnings || [];
+    document.getElementById('warnings-text').textContent = warnings.length
+      ? warnings.join(' ')
+      : 'AI не залишив особливих застережень — але завжди перевіряйте дані перед збереженням.';
+
+    goToStep('step-review');
+  }
+
+  async function handleFileSelected() {
+    const input = document.getElementById('rx-file-input');
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    input.value = '';
+
+    goToStep('step-loading');
+    document.getElementById('loading-sub').textContent = `«${file.name}» — аналізуємо за допомогою AI…`;
+
+    try {
+      const base64Data = await readFileAsBase64(file);
+      const mediaType = file.type || 'image/jpeg';
+      const result = await callExtractionAPI(base64Data, mediaType);
+      applyExtractionResult(result);
+    } catch (err) {
+      console.error('AI extraction failed:', err);
+      goToStep('step-error');
+    }
+  }
+
+  function confIndicator(conf) {
+    if (!conf) return '';
+    return `<span class="conf-indicator"><span class="conf-label-text">Впевненість:</span><span class="chip ${conf}">${confLabel(conf)}</span></span>`;
+  }
+  function fieldHint(conf) {
+    return conf === 'low' ? `<div class="field-hint">⚠ Нечітко розпізнано — перевірте за оригіналом</div>` : '';
+  }
+
+  function renderReviewMeds() {
+    const box = document.getElementById('review-meds');
+    box.innerHTML = extractedMeds.map(m => `
+      <div class="med-extract-card" data-id="${m.id}">
+        ${extractedMeds.length > 1 ? `<button class="remove-card-btn" onclick="removeExtractedMed('${m.id}')" aria-label="Видалити препарат">✕</button>` : ''}
+        <div class="extract-row"><label>Препарат</label>${m.nameConf ? confIndicator(m.nameConf) : '<span class="chip medium">введено вручну</span>'}</div>
+        <div class="extract-name-field"><input id="name-${m.id}" value="${m.name}" placeholder="Назва препарату"></div>
+        ${fieldHint(m.nameConf)}
+
+        <div class="extract-grid">
+          <div>
+            <div class="extract-row"><label>Дозування</label>${confIndicator(m.dosageConf)}</div>
+            <div class="extract-card-field"><input id="dosage-${m.id}" value="${m.dosage}" placeholder="не розпізнано — вкажіть вручну"></div>
+            ${fieldHint(m.dosageConf)}
+          </div>
+          <div>
+            <div class="extract-row"><label>Форма випуску</label></div>
+            <div class="extract-card-field"><select id="form-${m.id}">
+              <option value="таблетки" ${m.form === 'таблетки' ? 'selected' : ''}>таблетки</option>
+              <option value="краплі" ${m.form === 'краплі' ? 'selected' : ''}>краплі</option>
+              <option value="капсули" ${m.form === 'капсули' ? 'selected' : ''}>капсули</option>
+              <option value="ін'єкція" ${m.form === "ін'єкція" ? 'selected' : ''}>ін'єкція</option>
+            </select></div>
+          </div>
+          <div>
+            <div class="extract-row"><label>Схема прийому</label>${confIndicator(m.freqConf)}</div>
+            <div class="extract-card-field"><input id="freq-${m.id}" value="${m.freq}"></div>
+            ${fieldHint(m.freqConf)}
+          </div>
+          <div>
+            <div class="extract-row"><label>Тривалість (днів)</label>${confIndicator(m.durationConf)}</div>
+            <div class="extract-card-field"><input id="duration-${m.id}" value="${m.duration}" placeholder="залиште порожнім, якщо постійно"></div>
+            ${fieldHint(m.durationConf)}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  function confLabel(c) { return { high: 'висока', medium: 'середня', low: 'низька' }[c] || c; }
+  function removeExtractedMed(id) { extractedMeds = extractedMeds.filter(m => m.id !== id); renderReviewMeds(); }
+  function addBlankMed() {
+    blankCounter++;
+    extractedMeds.push({ id: 'blank' + blankCounter, name: '', form: 'таблетки', nameConf: null, dosage: '', dosageConf: null, freq: '1 раз на день', freqConf: null, duration: '', durationConf: null });
+    renderReviewMeds();
+  }
+
+  function confirmReview() {
+    let valid = true;
+    pendingMeds = [];
+    extractedMeds.forEach(m => {
+      const name = document.getElementById('name-' + m.id).value.trim();
+      const dosage = document.getElementById('dosage-' + m.id).value.trim();
+      const form = document.getElementById('form-' + m.id).value;
+      const freq = document.getElementById('freq-' + m.id).value.trim();
+      const duration = document.getElementById('duration-' + m.id).value.trim();
+      const nameInput = document.getElementById('name-' + m.id);
+      const dosageInput = document.getElementById('dosage-' + m.id);
+      nameInput.classList.toggle('is-invalid', !name);
+      dosageInput.classList.toggle('is-invalid', !dosage);
+      if (!name || !dosage) valid = false;
+      pendingMeds.push({ name, dosage, form, frequency: freq, duration, instructions: '' });
+    });
+    if (extractedMeds.length === 0) { showToast('Додайте хоча б один препарат'); return; }
+    if (!valid) { showToast('Заповніть назву та дозування для кожного препарату'); return; }
+    pendingFromAI = true; pendingIsEdit = false;
+    renderTimingStep();
+    goToStep('step-timing');
+  }
+
+  function confirmManual() {
+    const name = document.getElementById('man-name');
+    const dosage = document.getElementById('man-dosage');
+    const form = document.getElementById('man-form').value;
+    const freqSel = document.getElementById('man-freq');
+    const freqOther = document.getElementById('man-freq-other');
+    const freq = freqSel.value === 'other' ? freqOther.value.trim() : freqSel.value;
+    const duration = document.getElementById('man-duration').value.trim();
+    const instructions = document.getElementById('man-instructions').value.trim();
+    let valid = true;
+    name.classList.toggle('is-invalid', !name.value.trim());
+    dosage.classList.toggle('is-invalid', !dosage.value.trim());
+    freqOther.classList.toggle('is-invalid', freqSel.value === 'other' && !freq);
+    if (!name.value.trim() || !dosage.value.trim() || !freq) valid = false;
+    if (!valid) { showToast('Заповніть назву, дозування та частоту прийому'); return; }
+    pendingMeds = [{ name: name.value.trim(), dosage: dosage.value.trim(), form, frequency: freq, duration, instructions }];
+    pendingFromAI = false; pendingIsEdit = false;
+    renderTimingStep();
+    goToStep('step-timing');
+  }
+
+  function renderTimingStep() {
+    const today = new Date().toISOString().slice(0, 10);
+    const box = document.getElementById('timing-list');
+    box.innerHTML = pendingMeds.map((m, idx) => {
+      const times = defaultTimesFor(m.frequency);
+      return `<div class="timing-card" data-idx="${idx}">
+        <div class="timing-name">${m.name} · ${m.dosage}</div>
+        <div class="time-row"><div class="time-row-label">Дата початку</div><input type="date" id="start-${idx}" value="${today}"></div>
+        <div class="time-row"><div class="time-row-label">Час прийому (${m.frequency})</div>${times.map((t, i) => `<input type="time" id="time-${idx}-${i}" value="${t}">`).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function finalizeAdd() {
+    if (pendingIsEdit) {
+      const m = pendingMeds[0];
+      const med = state.medications.find(x => x.id === editingMedId);
+      med.name = m.name; med.dosage = m.dosage; med.form = m.form; med.frequency = m.frequency;
+      med.instructions = m.instructions || ''; med.durationDays = m.duration ? parseInt(m.duration, 10) : null;
+      state.doses = state.doses.filter(d => !(d.medId === editingMedId && (d.status === 'due' || d.status === 'upcoming')));
+      const times = defaultTimesFor(m.frequency).map((_, i) => document.getElementById(`time-0-${i}`).value);
+      times.forEach((t, i) => { state.doses.push({ id: doseIdCounter++, medId: editingMedId, name: m.name + ' ' + m.dosage, time: t, status: i === 0 ? 'due' : 'upcoming' }); });
+      document.getElementById('overlay-add').classList.add('is-hidden');
+      pendingIsEdit = false; editingMedId = null;
+      renderAll();
+      showToast('Дані оновлено ✓ Сьогоднішні неприйняті дози перераховано');
+      return;
+    }
+    let rxMedNames = [];
+    pendingMeds.forEach((m, idx) => {
+      const times = defaultTimesFor(m.frequency).map((_, i) => document.getElementById(`time-${idx}-${i}`).value);
+      const id = medIdCounter++;
+      state.medications.push({ id, name: m.name, dosage: m.dosage, form: m.form || 'таблетки', frequency: m.frequency, instructions: m.instructions || '', sideEffects: '', startDate: 'сьогодні', durationDays: m.duration ? parseInt(m.duration, 10) : null, elapsedDays: 0, status: 'active' });
+      times.forEach((t, i) => { state.doses.push({ id: doseIdCounter++, medId: id, name: m.name + ' ' + m.dosage, time: t, status: i === 0 ? 'due' : 'upcoming' }); });
+      rxMedNames.push({ name: m.name, dosage: m.dosage });
+    });
+    if (pendingFromAI) {
+      state.prescriptions.push({ id: rxIdCounter++, uploadedAt: 'сьогодні', type: 'handwritten', status: 'processed', meds: rxMedNames, clinic: 'Клініка «Добробут»', doctor: 'Олег Сидоренко', doctorSpecialty: 'терапевт', issuedAt: 'сьогодні, 09:15', code: '' });
+    }
+    document.getElementById('overlay-add').classList.add('is-hidden');
+    emptyDemo = false;
+    renderAll();
+    showToast('Лікування додано, графік складено ✓');
+  }
+
+  function showToast(text) {
+    const toast = document.getElementById('toast');
+    toast.textContent = text;
+    toast.classList.add('is-shown');
+    setTimeout(() => toast.classList.remove('is-shown'), 2600);
+  }
+
+  renderAll();
+</script>
+
+</body>
+</html>
