@@ -9,8 +9,8 @@ const app = express();
 app.use(express.json({ limit: '25mb' }));
 app.use(express.static(join(__dirname, 'public')));
 
-const GEMINI_MODEL = 'gemini-1.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const EXTRACTION_SYSTEM_PROMPT = `Ты — система извлечения структурированных данных, встроенная в приложение для управления приёмом лекарств. Твоя единственная задача — прочитать изображение или документ медицинского рецепта и извлечь препараты, дозировки, схему приёма и метаданные документа в строгом JSON-формате.
 
@@ -77,23 +77,16 @@ app.post('/api/scan-prescription', async (req, res) => {
   }
 
   const body = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: EXTRACTION_SYSTEM_PROMPT }]
-      },
-      {
-        role: 'model',
-        parts: [{ text: 'Зрозуміло. Чекаю на документ.' }]
-      },
-      {
-        role: 'user',
-        parts: [
-          { inline_data: { mime_type: mediaType, data: base64Data } },
-          { text: 'Витягни дані з цього рецепта згідно інструкції. Виведи тільки JSON.' }
-        ]
-      }
-    ],
+    system_instruction: {
+      parts: [{ text: EXTRACTION_SYSTEM_PROMPT }]
+    },
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mediaType, data: base64Data } },
+        { text: 'Витягни дані з цього рецепта згідно інструкції. Виведи тільки JSON.' }
+      ]
+    }],
     generationConfig: {
       temperature: 0.1,
       maxOutputTokens: 8192
