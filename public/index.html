@@ -247,7 +247,10 @@
     .extract-grid { grid-template-columns: 1fr; }
   }
 
+  .mobile-only { display: none; }
+
   @media (max-width: 700px) {
+    .mobile-only { display: flex; }
     .stats-row { flex-direction: column; }
     .tips-grid { grid-template-columns: 1fr; }
     .tabs { display: none; }
@@ -397,7 +400,7 @@
     <div id="step-entry" class="step is-active">
       <h3 class="sheet-title">Додати лікування</h3>
       <div class="sheet-sub">Завантажте рецепт — ми визначимо препарати та складемо графік</div>
-      <div class="choice-card" onclick="document.getElementById('rx-file-camera').click()">
+      <div class="choice-card mobile-only" onclick="document.getElementById('rx-file-camera').click()">
         <div class="choice-icon" aria-hidden="true">📷</div>
         <div class="choice-text"><strong>Зробити фото</strong><span>Відкрити камеру і сфотографувати рецепт</span></div>
       </div>
