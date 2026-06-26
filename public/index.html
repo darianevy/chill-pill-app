@@ -82,7 +82,7 @@
   .empty-state { text-align: center; padding: 44px 20px; }
   .empty-state .icon { font-size: 34px; margin-bottom: 8px; }
   .empty-state p { color: var(--muted); margin: 6px 0 16px; }
-  .demo-toggle { text-align: center; margin-top: 18px; }
+
 
   /* ---------- Tips: явный отдельный сегмент ---------- */
   .tips-section { margin-top: 48px; }
@@ -244,18 +244,27 @@
   .login-card { background: var(--white); border: 3px solid var(--black); border-radius: 24px; box-shadow: 6px 6px 0 var(--dark); padding: 40px 32px; max-width: 380px; width: 100%; text-align: center; }
   .login-logo { display: flex; justify-content: center; margin-bottom: 26px; }
   .login-title { font-size: 21px; margin-bottom: 8px; }
-  .login-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 28px; line-height: 1.4; }
+  .login-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 24px; line-height: 1.4; }
   .google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--white); border: 1.5px solid #DADCE0; border-radius: 12px; padding: 13px 16px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14.5px; color: #3C4043; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.08); transition: background .15s; }
   .google-btn:hover { background: #F8F9FA; }
   .google-btn:disabled { opacity: .6; cursor: default; }
   .login-legal { font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.45; }
   .login-privacy-note { margin-top: 22px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .login-features { text-align: left; margin-bottom: 26px; display: flex; flex-direction: column; gap: 11px; }
+  .login-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--body-text); font-weight: 500; }
+  .login-feature-icon { font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; background: var(--off-white); display: flex; align-items: center; justify-content: center; }
 
-  .user-badge { display: none; align-items: center; gap: 8px; }
-  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); border: 1.5px solid var(--black); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; overflow: hidden; }
-  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .user-name { font-size: 13px; font-weight: 600; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .logout-link { font-size: 12px !important; }
+  .user-menu-wrap { position: relative; display: none; }
+  .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--primary-light); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-strong); flex-shrink: 0; overflow: hidden; }
+  .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .user-menu { display: none; position: absolute; top: 54px; right: 0; background: var(--white); border: 2px solid var(--black); border-radius: 16px; box-shadow: 4px 4px 0 var(--black); padding: 14px; min-width: 210px; z-index: 30; }
+  .user-menu.is-open { display: block; }
+  .user-menu-name { font-weight: 700; font-size: 13.5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(26,28,26,.12); }
+  .avatar-picker-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 8px; }
+  .avatar-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(26,28,26,.12); }
+  .avatar-option { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--black); background: var(--off-white); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .avatar-option.is-selected { background: var(--primary-light); border-width: 2px; }
+  .user-menu-item { display: block; width: 100%; text-align: left; background: none; border: none; padding: 7px 4px; font-size: 13.5px; font-weight: 600; cursor: pointer; color: var(--conf-low-text); font-family: 'Inter', sans-serif; }
 
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: var(--white); padding: 12px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 4px 4px 0 var(--primary); z-index: 60; opacity: 0; transition: opacity .2s ease; max-width: 90vw; text-align: center; }
   .toast.is-shown { opacity: 1; }
@@ -282,6 +291,7 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -293,8 +303,13 @@
         <path d="M86.2598 11.9299C86.2598 12.6033 86.1298 13.2833 85.8698 13.9699C85.6164 14.6499 85.2264 15.2766 84.6998 15.8499C84.1798 16.4233 83.5164 16.8866 82.7098 17.2399C81.9098 17.5866 80.9598 17.7599 79.8598 17.7599C78.4131 17.7599 77.1731 17.4366 76.1398 16.7899C75.1131 16.1366 74.3264 15.2366 73.7798 14.0899C73.2398 12.9433 72.9698 11.6199 72.9698 10.1199C72.9698 8.61994 73.2398 7.29994 73.7798 6.15994C74.3264 5.01327 75.1131 4.1166 76.1398 3.46994C77.1731 2.82327 78.4131 2.49994 79.8598 2.49994C81.0598 2.49994 82.0831 2.70327 82.9298 3.10994C83.7831 3.51661 84.4664 4.04994 84.9798 4.70994C85.4998 5.36994 85.8598 6.07661 86.0598 6.82994C86.1931 7.34327 86.2598 7.83994 86.2598 8.31994H82.2098C82.2098 8.10661 82.1964 7.91994 82.1698 7.75994C82.1098 7.32661 81.9798 6.94994 81.7798 6.62994C81.5798 6.30994 81.3164 6.06327 80.9898 5.88994C80.6698 5.70994 80.2931 5.61994 79.8598 5.61994C79.3398 5.61994 78.8698 5.77327 78.4498 6.07994C78.0298 6.3866 77.6931 6.86994 77.4398 7.52994C77.1931 8.18994 77.0698 9.05327 77.0698 10.1199C77.0698 11.1799 77.1931 12.0433 77.4398 12.7099C77.6931 13.3766 78.0298 13.8666 78.4498 14.1799C78.8698 14.4933 79.3398 14.6499 79.8598 14.6499C80.2331 14.6499 80.5631 14.5833 80.8498 14.4499C81.1431 14.3099 81.3898 14.1166 81.5898 13.8699C81.7898 13.6233 81.9431 13.3366 82.0498 13.0099C82.1564 12.6766 82.2098 12.3166 82.2098 11.9299H86.2598ZM95.0773 17.4999V13.8399C95.0773 13.7333 95.0773 13.5733 95.0773 13.3599C95.0773 13.1399 95.0773 12.9199 95.0773 12.6999C95.0773 12.4733 95.0773 12.2999 95.0773 12.1799C95.0773 11.5066 94.9773 10.9733 94.7773 10.5799C94.5773 10.1866 94.1473 9.98994 93.4873 9.98994C93.0606 9.98994 92.7173 10.0766 92.4573 10.2499C92.1973 10.4233 92.0073 10.6733 91.8873 10.9999C91.7739 11.3266 91.7173 11.7199 91.7173 12.1799L90.9373 11.3799C90.9373 10.4066 91.1206 9.56994 91.4873 8.86994C91.8539 8.16327 92.3673 7.61994 93.0273 7.23994C93.6873 6.85327 94.4606 6.65994 95.3473 6.65994C96.6606 6.65994 97.6139 7.03994 98.2073 7.79994C98.8073 8.55994 99.1073 9.62327 99.1073 10.9899C99.1073 11.3299 99.1073 11.7533 99.1073 12.2599C99.1073 12.7599 99.1073 13.3733 99.1073 14.0999V17.4999H95.0773ZM87.6873 17.4999V1.86994H91.7173V17.4999H87.6873ZM100.468 17.4999V6.87994H104.458V17.4999H100.468ZM102.458 5.62994C101.864 5.62994 101.344 5.47661 100.898 5.16994C100.458 4.86327 100.238 4.42661 100.238 3.85994C100.238 3.28661 100.458 2.84994 100.898 2.54994C101.344 2.24327 101.864 2.08994 102.458 2.08994C103.051 2.08994 103.568 2.24327 104.008 2.54994C104.454 2.84994 104.678 3.28661 104.678 3.85994C104.678 4.43327 104.454 4.87327 104.008 5.17994C103.568 5.47994 103.051 5.62994 102.458 5.62994ZM110.037 1.86994V17.4999H106.067V1.86994H110.037ZM115.939 1.86994V17.4999H111.969V1.86994H115.939ZM126.591 17.4999H122.551V2.74994H128.201C129.321 2.74994 130.297 2.97327 131.131 3.41994C131.964 3.85994 132.611 4.46327 133.071 5.22994C133.531 5.9966 133.761 6.86327 133.761 7.82994C133.761 8.79661 133.531 9.67661 133.071 10.4699C132.611 11.2566 131.964 11.8866 131.131 12.3599C130.297 12.8266 129.321 13.0599 128.201 13.0599H126.591V17.4999ZM126.591 11.8899L124.771 10.0699H127.791C128.124 10.0699 128.434 9.98994 128.721 9.82994C129.014 9.66327 129.251 9.41327 129.431 9.07994C129.611 8.74661 129.701 8.32994 129.701 7.82994C129.701 7.32994 129.611 6.92661 129.431 6.61994C129.251 6.31327 129.014 6.09327 128.721 5.95994C128.434 5.81994 128.124 5.74994 127.791 5.74994H124.771L126.591 3.92994V11.8899ZM134.86 17.4999V6.87994H138.85V17.4999H134.86ZM136.85 5.62994C136.256 5.62994 135.736 5.47661 135.29 5.16994C134.85 4.86327 134.63 4.42661 134.63 3.85994C134.63 3.28661 134.85 2.84994 135.29 2.54994C135.736 2.24327 136.256 2.08994 136.85 2.08994C137.443 2.08994 137.96 2.24327 138.4 2.54994C138.846 2.84994 139.07 3.28661 139.07 3.85994C139.07 4.43327 138.846 4.87327 138.4 5.17994C137.96 5.47994 137.443 5.62994 136.85 5.62994ZM144.429 1.86994V17.4999H140.459V1.86994H144.429ZM150.331 1.86994V17.4999H146.361V1.86994H150.331Z" fill="#1A1C1A"/>
       </svg>
     </div>
-    <h2 class="login-title">Увійти, щоб продовжити</h2>
-    <p class="login-sub">Ваші лікування та історія прийомів в одному місці</p>
+    <h2 class="login-title">Прийом ліків без хаосу</h2>
+    <p class="login-sub">Сфотографуйте рецепт — решту зробить AI</p>
+    <div class="login-features">
+      <div class="login-feature"><span class="login-feature-icon" aria-hidden="true">📷</span>AI розпізнає препарати з фото рецепта</div>
+      <div class="login-feature"><span class="login-feature-icon" aria-hidden="true">⏰</span>Нагадування, щоб не пропустити прийом</div>
+      <div class="login-feature"><span class="login-feature-icon" aria-hidden="true">🔒</span>Дані бачите тільки ви</div>
+    </div>
     <button class="google-btn" id="google-login-btn" onclick="googleLogin()">
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.85 2.09-1.81 2.73v2.27h2.92c1.71-1.57 2.69-3.89 2.69-6.64z"/>
@@ -325,10 +340,21 @@
     <button class="tab" data-tab="history">Історія</button>
   </nav>
   <div class="topbar-right">
-    <div class="user-badge" id="user-badge">
-      <span class="user-avatar" id="user-avatar" aria-hidden="true">🙂</span>
-      <span class="user-name" id="user-name-label"></span>
-      <button class="btn-text logout-link" onclick="logout()">Вийти</button>
+    <div class="user-menu-wrap" id="user-menu-wrap">
+      <button class="avatar-btn" id="avatar-btn" onclick="toggleUserMenu()" aria-label="Меню користувача" aria-expanded="false">🙂</button>
+      <div class="user-menu" id="user-menu">
+        <div class="user-menu-name" id="user-menu-name">Користувач</div>
+        <div class="avatar-picker-label">Аватар</div>
+        <div class="avatar-picker" id="avatar-picker">
+          <button class="avatar-option is-selected" data-avatar="🙂" onclick="selectAvatar('🙂')">🙂</button>
+          <button class="avatar-option" data-avatar="😊" onclick="selectAvatar('😊')">😊</button>
+          <button class="avatar-option" data-avatar="🐱" onclick="selectAvatar('🐱')">🐱</button>
+          <button class="avatar-option" data-avatar="🦊" onclick="selectAvatar('🦊')">🦊</button>
+          <button class="avatar-option" data-avatar="🌿" onclick="selectAvatar('🌿')">🌿</button>
+          <button class="avatar-option" data-avatar="⭐" onclick="selectAvatar('⭐')">⭐</button>
+        </div>
+        <button class="user-menu-item" onclick="logout()">🚪 Вийти</button>
+      </div>
     </div>
     <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Меню" aria-expanded="false">☰</button>
     <button class="btn btn-primary" onclick="openAdd()">+ Додати</button>
@@ -361,7 +387,6 @@
       <button class="btn btn-primary" onclick="openAdd()">Додати лікування</button>
     </div>
 
-    <div class="demo-toggle"><button class="btn-text" onclick="toggleEmptyDemo()">показати empty state ↔</button></div>
 
     <div class="tips-section">
       <h3 class="tips-heading">💡 Корисне</h3>
@@ -573,89 +598,17 @@
 
 <script>
   const palette = ['#A8D1DB', '#F9C66E', '#B0D6B2', '#F37762', '#A6A5C7'];
-  function colorForMed(id) { return palette[id % palette.length]; }
+  function colorForMed(id) { let hash = 0; const s = String(id); for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i); return palette[Math.abs(hash) % palette.length]; }
   function iconForForm(form) { return { 'таблетки': '💊', 'краплі': '💧', 'капсули': '💊', "ін'єкція": '💉' }[form] || '💊'; }
 
-  let medIdCounter = 4;
-  let doseIdCounter = 200;
-  let rxIdCounter = 3;
   let medsSubTab = 'active';
   let rxSubTab = 'active';
 
-  let state = {
-    medications: [
-      { id: 1, name: 'Метопролол', dosage: '50 мг', form: 'таблетки', frequency: '2 рази на день', instructions: 'Приймати після їжі', sideEffects: 'Можливі: запаморочення, втома, сповільнення серцебиття. Якщо симптоми сильні — зверніться до лікаря.', startDate: '1 червня', durationDays: null, elapsedDays: 0, status: 'active' },
-      { id: 2, name: 'Вітамін D3', dosage: '2000 МЕ', form: 'краплі', frequency: '1 раз на день', instructions: '', sideEffects: '', startDate: '1 червня', durationDays: null, elapsedDays: 0, status: 'active' },
-      { id: 3, name: 'Амоксицилін', dosage: '500 мг', form: 'таблетки', frequency: '2 рази на день', instructions: 'Після їжі', sideEffects: 'Можливі: нудота, висип, розлад шлунку.', startDate: '18 червня', durationDays: 7, elapsedDays: 6, status: 'active' }
-    ],
-    doses: [
-      { id: 101, medId: 1, name: 'Метопролол 50 мг', time: '08:00', status: 'taken' },
-      { id: 102, medId: 2, name: 'Вітамін D3', time: '09:00', status: 'due' },
-      { id: 103, medId: 1, name: 'Метопролол 50 мг', time: '20:00', status: 'upcoming' },
-      { id: 104, medId: 3, name: 'Амоксицилін 500 мг', time: '21:00', status: 'upcoming' }
-    ],
-    history: [
-      { date: '21 червня', name: 'Метопролол 50 мг', status: 'taken' },
-      { date: '21 червня', name: 'Вітамін D3', status: 'taken' },
-      { date: '20 червня', name: 'Метопролол 50 мг', status: 'taken' },
-      { date: '20 червня', name: 'Вітамін D3', status: 'missed' },
-      { date: '19 червня', name: 'Метопролол 50 мг', status: 'taken' }
-    ],
-    prescriptions: [
-      { id: 1, uploadedAt: '1 червня', type: 'printed', status: 'processed', archived: false, meds: [{ name: 'Метопролол', dosage: '50 мг' }, { name: 'Вітамін D3', dosage: '2000 МЕ' }], clinic: 'Клініка «Добробут»', doctor: 'Ірина Коваленко', doctorSpecialty: 'кардіолог', issuedAt: '1 червня, 10:24', code: '' },
-      { id: 2, uploadedAt: '10 червня', type: 'electronic_pdf', status: 'processed', archived: false, meds: [{ name: 'Амоксицилін', dosage: '500 мг' }], clinic: 'Поліклініка №3', doctor: 'Наталія Петренко', doctorSpecialty: "сімейний лікар", issuedAt: '10 червня, 14:02', code: '4815-1623-0942-3343' }
-    ]
-  };
+  let state = { medications: [], doses: [], history: [], prescriptions: [] };
 
-  let emptyDemo = false;
   let historyStatusFilter = 'all';
   let extractedMeds = [];
   let blankCounter = 0;
-
-  const EXTRACTION_SYSTEM_PROMPT = `Ты — система извлечения структурированных данных, встроенная в приложение для управления приёмом лекарств. Твоя единственная задача — прочитать изображение или документ медицинского рецепта и извлечь препараты, дозировки, схему приёма и метаданные документа в строгом JSON-формате.
-
-Ты не даёшь медицинских консультаций и не используешь общие медицинские знания, чтобы "дополнить" или "исправить" то, что не можешь чётко прочитать в исходном документе.
-
-КРИТИЧЕСКИЕ ПРАВИЛА:
-1. Извлекай только то, что видно в документе. Никогда не подставляй "типичную" дозу, если фактически написанная доза нечитаема или отсутствует — помечай поле как неуверенное или null.
-2. Если не уверена в поле — честно отражай это через confidence. Никогда не угадывай молча.
-3. Если документ не является рецептом, либо в нём нет извлекаемой информации — верни пустой массив medications и объясни почему в extraction_warnings.
-4. Выводи ТОЛЬКО JSON-объект по схеме ниже. Без markdown-форматирования, без преамбулы.
-5. Сохраняй оригинальное написание названия препарата ровно так, как в документе.
-6. Если в документе несколько препаратов — верни все как отдельные элементы массива.
-
-ПРАВИЛА CONFIDENCE: "high" — печатный/типографский текст или полностью разборчивый почерк. "medium" — разборчиво, но есть небольшая неоднозначность. "low" — нечитаемо, отсутствует, противоречиво, либо вывод косвенный.
-overall_confidence препарата = наименьшее значение среди name_confidence, dosage_confidence, frequency_confidence, duration_confidence.
-
-СХЕМА ВЫВОДА:
-{
-  "document_type": "handwritten | printed | electronic_pdf",
-  "document_metadata": {
-    "clinic": "string или null",
-    "doctor_name": "string или null",
-    "doctor_specialty": "string или null",
-    "issued_at": "string или null"
-  },
-  "medications": [
-    {
-      "name": "string",
-      "name_confidence": "high | medium | low",
-      "dosage": "string или null",
-      "dosage_confidence": "high | medium | low",
-      "form": "string или null",
-      "frequency_human": "строка как в источнике",
-      "frequency_confidence": "high | medium | low",
-      "frequency_structured": { "times_per_day": "число или null", "specific_times": ["string"] },
-      "duration_days": "число или null",
-      "duration_confidence": "high | medium | low",
-      "special_instructions": "string или null",
-      "overall_confidence": "high | medium | low"
-    }
-  ],
-  "extraction_warnings": ["string"]
-}
-
-Не добавляй никакого текста до или после JSON-объекта.`;
   let pendingMeds = [];
   let pendingFromAI = false;
   let pendingIsEdit = false;
@@ -681,6 +634,25 @@ overall_confidence препарата = наименьшее значение с
     const isOpen = nav.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   }
+  function toggleUserMenu() {
+    const menu = document.getElementById('user-menu');
+    const btn = document.getElementById('avatar-btn');
+    const isOpen = menu.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+  function selectAvatar(emoji) {
+    const btn = document.getElementById('avatar-btn');
+    btn.textContent = emoji;
+    document.querySelectorAll('.avatar-option').forEach(o => o.classList.toggle('is-selected', o.dataset.avatar === emoji));
+    document.getElementById('user-menu').classList.remove('is-open');
+  }
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('user-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('user-menu').classList.remove('is-open');
+      document.getElementById('avatar-btn').setAttribute('aria-expanded', 'false');
+    }
+  });
 
   function statusLabel(status) { return { upcoming: 'Очікує', due: 'Зараз', taken: 'Прийнято', skipped: 'Пропущено', missed: 'Не відмічено' }[status] || status; }
   function defaultTimesFor(freqText) {
@@ -698,7 +670,7 @@ overall_confidence препарата = наименьшее значение с
     const box = document.getElementById('dose-list');
     const emptyBox = document.getElementById('dashboard-empty');
     const sub = document.getElementById('dashboard-sub');
-    if (emptyDemo || state.doses.length === 0) { box.innerHTML = ''; emptyBox.style.display = 'block'; sub.textContent = 'Немає запланованих прийомів'; return; }
+    if (state.doses.length === 0) { box.innerHTML = ''; emptyBox.style.display = 'block'; sub.textContent = 'Немає запланованих прийомів'; return; }
     emptyBox.style.display = 'none';
     sub.textContent = 'Сьогодні у вас ' + state.doses.length + ' прийоми';
 
@@ -715,7 +687,7 @@ overall_confidence препарата = наименьшее значение с
         const hint = med && med.instructions ? `<div class="dose-hint">🍽 ${med.instructions}</div>` : '';
         let actions;
         if (d.status === 'due') {
-          actions = `<div class="dose-actions"><button class="pill take" onclick="markDose(${d.id}, 'taken')">Прийняв</button><button class="pill skip" onclick="markDose(${d.id}, 'skipped')">Пропустив</button></div>`;
+          actions = `<div class="dose-actions"><button class="pill take" onclick="markDose('${d.id}', 'taken')">Прийняв</button><button class="pill skip" onclick="markDose('${d.id}', 'skipped')">Пропустив</button></div>`;
         } else if (d.status === 'upcoming') {
           actions = `<span class="pill upcoming">Очікує</span>`;
         } else {
@@ -734,15 +706,22 @@ overall_confidence препарата = наименьшее значение с
     box.innerHTML = html;
   }
 
-  function markDose(id, newStatus) {
+  async function markDose(id, newStatus) {
     const dose = state.doses.find(d => d.id === id);
     if (!dose || dose.status !== 'due') return;
     dose.status = newStatus;
-    state.history.unshift({ date: 'Сьогодні', name: dose.name, status: newStatus });
+    const historyEntry = { date: 'Сьогодні', name: dose.name, status: newStatus, timestamp: Date.now() };
+    state.history.unshift(historyEntry);
     renderAll();
     showToast(newStatus === 'taken' ? 'Прийом відмічено ✓' : 'Пропуск відмічено');
+    if (currentUserId) {
+      const userRef = db.collection('users').doc(currentUserId);
+      await userRef.collection('doses').doc(id).update({ status: newStatus });
+      const hRef = await userRef.collection('history').add(historyEntry);
+      historyEntry.id = hRef.id;
+    }
   }
-  function toggleEmptyDemo() { emptyDemo = !emptyDemo; renderDashboard(); }
+
 
   function renderTimeline() {
     const box = document.getElementById('timeline-list');
@@ -783,8 +762,8 @@ overall_confidence препарата = наименьшее значение с
       const dur = m.durationDays ? `${Math.max(m.durationDays - (m.elapsedDays || 0), 0)} з ${m.durationDays} днів` : 'постійно';
       const hasDetails = m.instructions || m.sideEffects;
       const actions = m.status === 'active'
-        ? `<button class="btn btn-secondary btn-sm" onclick="openEditMed(${m.id})">Редагувати</button><button class="btn btn-secondary btn-sm" onclick="archiveMed(${m.id})">Архівувати</button>`
-        : `<button class="btn btn-secondary btn-sm" onclick="restoreMed(${m.id})">Повернути в активні</button>`;
+        ? `<button class="btn btn-secondary btn-sm" onclick="openEditMed('${m.id}')">Редагувати</button><button class="btn btn-secondary btn-sm" onclick="archiveMed('${m.id}')">Архівувати</button>`
+        : `<button class="btn btn-secondary btn-sm" onclick="restoreMed('${m.id}')">Повернути в активні</button>`;
       return `<div class="card med-card">
         <div class="med-accent" style="background:${colorForMed(m.id)};"></div>
         <div class="med-body">
@@ -797,7 +776,7 @@ overall_confidence препарата = наименьшее значение с
           </div>
           <div class="med-actions-row">${actions}</div>
           ${hasDetails ? `
-          <button class="btn-text" id="med-toggle-${m.id}" onclick="toggleMedDetails(${m.id})" style="margin-top:12px;">Детальніше ▾</button>
+          <button class="btn-text" id="med-toggle-${m.id}" onclick="toggleMedDetails('${m.id}')" style="margin-top:12px;">Детальніше ▾</button>
           <div class="med-details" id="details-${m.id}">
             <span class="label">Інструкція із застосування</span>${m.instructions || 'інформація не вказана'}
             <span class="label">Можливі побічні ефекти</span>${m.sideEffects || 'інформація відсутня'}
@@ -815,15 +794,28 @@ overall_confidence препарата = наименьшее значение с
     btn.textContent = box.classList.contains('is-shown') ? 'Згорнути ▴' : 'Детальніше ▾';
   }
 
-  function archiveMed(id) {
+  async function archiveMed(id) {
     const med = state.medications.find(m => m.id === id);
     if (!med) return;
     med.status = 'archived';
+    const removedDoses = state.doses.filter(d => d.medId === id && (d.status === 'due' || d.status === 'upcoming'));
     state.doses = state.doses.filter(d => !(d.medId === id && (d.status === 'due' || d.status === 'upcoming')));
     renderAll();
     showToast('Курс архівовано, незавершені дози на сьогодні знято');
+    if (currentUserId) {
+      const userRef = db.collection('users').doc(currentUserId);
+      await userRef.collection('medications').doc(id).update({ status: 'archived' });
+      for (const d of removedDoses) { await userRef.collection('doses').doc(d.id).delete(); }
+    }
   }
-  function restoreMed(id) { const med = state.medications.find(m => m.id === id); if (med) med.status = 'active'; renderAll(); }
+  async function restoreMed(id) {
+    const med = state.medications.find(m => m.id === id);
+    if (med) med.status = 'active';
+    renderAll();
+    if (currentUserId) {
+      await db.collection('users').doc(currentUserId).collection('medications').doc(id).update({ status: 'active' });
+    }
+  }
 
   function openEditMed(id) {
     const med = state.medications.find(m => m.id === id);
@@ -886,19 +878,28 @@ overall_confidence препарата = наименьшее значение с
     renderPrescriptions();
   }
 
-  function archiveRx(id) {
+  async function archiveRx(id) {
     const rx = state.prescriptions.find(r => r.id === id);
     if (rx) { rx.archived = true; renderPrescriptions(); showToast('Рецепт архівовано'); }
+    if (currentUserId) {
+      await db.collection('users').doc(currentUserId).collection('prescriptions').doc(id).update({ archived: true });
+    }
   }
-  function restoreRx(id) {
+  async function restoreRx(id) {
     const rx = state.prescriptions.find(r => r.id === id);
     if (rx) { rx.archived = false; renderPrescriptions(); showToast('Рецепт відновлено'); }
+    if (currentUserId) {
+      await db.collection('users').doc(currentUserId).collection('prescriptions').doc(id).update({ archived: false });
+    }
   }
-  function deleteRx(id) {
+  async function deleteRx(id) {
     if (!window.confirm('Видалити рецепт? Це незворотня дія.')) return;
     state.prescriptions = state.prescriptions.filter(r => r.id !== id);
     renderPrescriptions();
     showToast('Рецепт видалено');
+    if (currentUserId) {
+      await db.collection('users').doc(currentUserId).collection('prescriptions').doc(id).delete();
+    }
   }
 
   function renderPrescriptions() {
@@ -912,9 +913,9 @@ overall_confidence препарата = наименьшее значение с
       const remaining = !r.archived ? rxEndingSoon(r.meds) : null;
       const alert = remaining !== null ? `<div class="rx-alert">⏳ ${remainingDaysPhrase(remaining)} — зверніть увагу, можливо знадобиться новий рецепт від лікаря</div>` : '';
       const actions = r.archived
-        ? `<button class="btn btn-secondary btn-sm" onclick="restoreRx(${r.id})">Відновити</button>
-           <button class="btn btn-secondary btn-sm" onclick="deleteRx(${r.id})" style="color:var(--conf-low-text);">Видалити</button>`
-        : `<button class="btn btn-secondary btn-sm" onclick="archiveRx(${r.id})">Архівувати</button>`;
+        ? `<button class="btn btn-secondary btn-sm" onclick="restoreRx('${r.id}')">Відновити</button>
+           <button class="btn btn-secondary btn-sm" onclick="deleteRx('${r.id}')" style="color:var(--conf-low-text);">Видалити</button>`
+        : `<button class="btn btn-secondary btn-sm" onclick="archiveRx('${r.id}')">Архівувати</button>`;
       return `<div class="card rx-card">
         ${alert}
         <div class="rx-top">
@@ -933,7 +934,7 @@ overall_confidence препарата = наименьшее значение с
         </div>
         <div class="med-actions-row">
           ${actions}
-          ${r.fileDataUrl ? `<button class="btn btn-secondary btn-sm" onclick="toggleRxPreview(${r.id})">👁 Переглянути оригінал</button>` : ''}
+          ${r.fileDataUrl ? `<button class="btn btn-secondary btn-sm" onclick="toggleRxPreview('${r.id}')">👁 Переглянути оригінал</button>` : ''}
         </div>
         ${r.fileDataUrl ? `<div id="rx-preview-${r.id}" class="original-preview" style="margin-top:12px;margin-bottom:0;"></div>` : ''}
       </div>`;
@@ -1225,34 +1226,76 @@ overall_confidence препарата = наименьшее значение с
     }).join('');
   }
 
-  function finalizeAdd() {
+  async function finalizeAdd() {
     if (pendingIsEdit) {
       const m = pendingMeds[0];
       const med = state.medications.find(x => x.id === editingMedId);
       med.name = m.name; med.dosage = m.dosage; med.form = m.form; med.frequency = m.frequency;
       med.instructions = m.instructions || ''; med.durationDays = m.duration ? parseInt(m.duration, 10) : null;
+      const removedDoses = state.doses.filter(d => d.medId === editingMedId && (d.status === 'due' || d.status === 'upcoming'));
       state.doses = state.doses.filter(d => !(d.medId === editingMedId && (d.status === 'due' || d.status === 'upcoming')));
       const times = defaultTimesFor(m.frequency).map((_, i) => document.getElementById(`time-0-${i}`).value);
-      times.forEach((t, i) => { state.doses.push({ id: doseIdCounter++, medId: editingMedId, name: m.name + ' ' + m.dosage, time: t, status: i === 0 ? 'due' : 'upcoming' }); });
+      const newDoses = [];
+      times.forEach((t, i) => {
+        newDoses.push({ medId: editingMedId, name: m.name + ' ' + m.dosage, time: t, status: i === 0 ? 'due' : 'upcoming' });
+      });
       document.getElementById('overlay-add').classList.add('is-hidden');
-      pendingIsEdit = false; editingMedId = null;
+      pendingIsEdit = false;
+      if (currentUserId) {
+        const userRef = db.collection('users').doc(currentUserId);
+        await userRef.collection('medications').doc(editingMedId).update({ name: med.name, dosage: med.dosage, form: med.form, frequency: med.frequency, instructions: med.instructions, durationDays: med.durationDays });
+        for (const d of removedDoses) { await userRef.collection('doses').doc(d.id).delete(); }
+        for (const d of newDoses) {
+          const ref = await userRef.collection('doses').add(d);
+          d.id = ref.id;
+          state.doses.push(d);
+        }
+      } else {
+        newDoses.forEach(d => { d.id = 'local_' + Date.now() + Math.random(); state.doses.push(d); });
+      }
+      editingMedId = null;
       renderAll();
       showToast('Дані оновлено ✓ Сьогоднішні неприйняті дози перераховано');
       return;
     }
     let rxMedNames = [];
-    pendingMeds.forEach((m, idx) => {
+    const userRef = currentUserId ? db.collection('users').doc(currentUserId) : null;
+    for (let idx = 0; idx < pendingMeds.length; idx++) {
+      const m = pendingMeds[idx];
       const times = defaultTimesFor(m.frequency).map((_, i) => document.getElementById(`time-${idx}-${i}`).value);
-      const id = medIdCounter++;
-      state.medications.push({ id, name: m.name, dosage: m.dosage, form: m.form || 'таблетки', frequency: m.frequency, instructions: m.instructions || '', sideEffects: '', startDate: 'сьогодні', durationDays: m.duration ? parseInt(m.duration, 10) : null, elapsedDays: 0, status: 'active' });
-      times.forEach((t, i) => { state.doses.push({ id: doseIdCounter++, medId: id, name: m.name + ' ' + m.dosage, time: t, status: i === 0 ? 'due' : 'upcoming' }); });
+      const medData = { name: m.name, dosage: m.dosage, form: m.form || 'таблетки', frequency: m.frequency, instructions: m.instructions || '', sideEffects: '', startDate: 'сьогодні', durationDays: m.duration ? parseInt(m.duration, 10) : null, elapsedDays: 0, status: 'active' };
+      let medId;
+      if (userRef) {
+        const medRef = await userRef.collection('medications').add(medData);
+        medId = medRef.id;
+      } else {
+        medId = 'local_' + Date.now() + Math.random();
+      }
+      medData.id = medId;
+      state.medications.push(medData);
+      for (let i = 0; i < times.length; i++) {
+        const doseData = { medId, name: m.name + ' ' + m.dosage, time: times[i], status: i === 0 ? 'due' : 'upcoming' };
+        if (userRef) {
+          const dRef = await userRef.collection('doses').add(doseData);
+          doseData.id = dRef.id;
+        } else {
+          doseData.id = 'local_' + Date.now() + Math.random();
+        }
+        state.doses.push(doseData);
+      }
       rxMedNames.push({ name: m.name, dosage: m.dosage });
-    });
+    }
     if (pendingFromAI) {
-      state.prescriptions.push({ id: rxIdCounter++, uploadedAt: 'сьогодні', type: loadedFileType === 'application/pdf' ? 'electronic_pdf' : 'handwritten', status: 'processed', archived: false, meds: rxMedNames, clinic: 'Клініка «Добробут»', doctor: 'Олег Сидоренко', doctorSpecialty: 'терапевт', issuedAt: 'сьогодні, 09:15', code: '', fileDataUrl: loadedFileDataUrl, fileType: loadedFileType });
+      const rxData = { uploadedAt: 'сьогодні', type: loadedFileType === 'application/pdf' ? 'electronic_pdf' : 'handwritten', status: 'processed', archived: false, meds: rxMedNames, clinic: document.getElementById('doc-meta-clinic').textContent, doctor: document.getElementById('doc-meta-doctor').textContent, doctorSpecialty: '', issuedAt: document.getElementById('doc-meta-issued').textContent, code: '' };
+      if (userRef) {
+        const rxRef = await userRef.collection('prescriptions').add(rxData);
+        rxData.id = rxRef.id;
+      } else {
+        rxData.id = 'local_' + Date.now() + Math.random();
+      }
+      state.prescriptions.push(rxData);
     }
     document.getElementById('overlay-add').classList.add('is-hidden');
-    emptyDemo = false;
     renderAll();
     showToast('Лікування додано, графік складено ✓');
   }
@@ -1278,19 +1321,21 @@ overall_confidence препарата = наименьшее значение с
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
+  const db = firebase.firestore();
+  let currentUserId = null;
   const googleProvider = new firebase.auth.GoogleAuthProvider();
 
   function showApp(user) {
     document.getElementById('view-login').style.display = 'none';
     document.querySelector('.topbar').style.display = '';
     document.querySelector('main').style.display = '';
-    document.getElementById('user-badge').style.display = 'flex';
-    document.getElementById('user-name-label').textContent = user.displayName || user.email;
-    const avatarEl = document.getElementById('user-avatar');
+    document.getElementById('user-menu-wrap').style.display = 'block';
+    document.getElementById('user-menu-name').textContent = user.displayName || user.email;
+    const avatarBtn = document.getElementById('avatar-btn');
     if (user.photoURL) {
-      avatarEl.innerHTML = `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">`;
+      avatarBtn.innerHTML = `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">`;
     } else {
-      avatarEl.textContent = '🙂';
+      avatarBtn.textContent = '🙂';
     }
   }
 
@@ -1298,7 +1343,7 @@ overall_confidence препарата = наименьшее значение с
     document.getElementById('view-login').style.display = 'flex';
     document.querySelector('.topbar').style.display = 'none';
     document.querySelector('main').style.display = 'none';
-    document.getElementById('user-badge').style.display = 'none';
+    document.getElementById('user-menu-wrap').style.display = 'none';
   }
 
   function googleLogin() {
@@ -1319,10 +1364,30 @@ overall_confidence препарата = наименьшее значение с
     auth.signOut();
   }
 
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (user) {
+      currentUserId = user.uid;
       showApp(user);
+      // Load data from Firestore
+      try {
+        const userRef = db.collection('users').doc(currentUserId);
+        const [medsSnap, dosesSnap, historySnap, rxSnap] = await Promise.all([
+          userRef.collection('medications').get(),
+          userRef.collection('doses').get(),
+          userRef.collection('history').orderBy('timestamp', 'desc').get(),
+          userRef.collection('prescriptions').get()
+        ]);
+        state.medications = medsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.doses = dosesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.history = historySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.prescriptions = rxSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (err) {
+        console.error('Failed to load data from Firestore:', err);
+      }
+      renderAll();
     } else {
+      currentUserId = null;
+      state = { medications: [], doses: [], history: [], prescriptions: [] };
       showLogin();
     }
   });
