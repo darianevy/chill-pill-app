@@ -240,6 +240,23 @@
   .sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
   .sheet-actions .btn { flex: 1; }
 
+  .login-screen { position: fixed; inset: 0; background: var(--off-white); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .login-card { background: var(--white); border: 3px solid var(--black); border-radius: 24px; box-shadow: 6px 6px 0 var(--dark); padding: 40px 32px; max-width: 380px; width: 100%; text-align: center; }
+  .login-logo { display: flex; justify-content: center; margin-bottom: 26px; }
+  .login-title { font-size: 21px; margin-bottom: 8px; }
+  .login-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 28px; line-height: 1.4; }
+  .google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--white); border: 1.5px solid #DADCE0; border-radius: 12px; padding: 13px 16px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14.5px; color: #3C4043; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.08); transition: background .15s; }
+  .google-btn:hover { background: #F8F9FA; }
+  .google-btn:disabled { opacity: .6; cursor: default; }
+  .login-legal { font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.45; }
+  .login-privacy-note { margin-top: 22px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+
+  .user-badge { display: none; align-items: center; gap: 8px; }
+  .user-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-light); border: 1.5px solid var(--black); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; overflow: hidden; }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { font-size: 13px; font-weight: 600; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logout-link { font-size: 12px !important; }
+
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--black); color: var(--white); padding: 12px 22px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 4px 4px 0 var(--primary); z-index: 60; opacity: 0; transition: opacity .2s ease; max-width: 90vw; text-align: center; }
   .toast.is-shown { opacity: 1; }
 
@@ -263,10 +280,36 @@
     .logo-text { display: inline; }
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 </head>
 <body>
 
-<header class="topbar">
+<div id="view-login" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="130" height="20" viewBox="0 0 153 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19.6983 19.2503C20.1567 19.4084 21.1641 20.2208 21.6162 20.554C25.1021 23.1228 30.1558 23.217 33.8565 21.0531C34.7192 20.5482 35.445 19.87 36.3184 19.3988C36.5105 19.2945 36.7785 19.4276 36.96 19.514C37.3722 20.0788 36.9695 20.498 36.5332 20.8782C32.1728 24.5235 26.2904 25.0213 21.3457 22.1341C20.608 21.7029 19.0569 20.8109 19.1153 19.8284C19.2517 19.4874 19.3667 19.4598 19.6983 19.2503ZM51.376 0.0335215C53.8768 -0.143391 57.7047 0.275654 55.7178 3.85383C55.3144 4.5798 54.2737 4.73821 53.4756 4.88997C52.8865 10.1953 50.6241 13.7733 45.3653 15.4398C42.1123 16.4993 38.5697 16.2046 35.5362 14.6234C32.7416 13.1813 30.7451 10.5568 30.1016 7.47883C29.7676 5.95765 29.9667 2.87395 27.4483 3.70247C26.4799 4.02067 26.3432 6.20725 26.1944 7.05598C25.4994 11.0173 23.3267 13.463 19.7422 15.0726C18.6785 15.5141 17.5632 15.8185 16.4229 15.9808C13.2714 16.4045 9.54643 15.5089 7.04982 13.5345C4.08324 11.1881 3.26732 8.4569 2.78322 4.94465C2.05624 4.82557 1.3363 4.68206 0.746111 4.20247C-0.647944 3.12599 0.0249784 0.373697 1.82521 0.252272C3.51339 0.13863 5.29351 0.185243 6.98928 0.184889C9.8898 0.18778 12.7911 0.173544 15.6914 0.14192L48.2266 0.04817C49.0824 0.0449174 50.4703 0.0976563 51.376 0.0335215Z" fill="#2D2B2B"/>
+        <path d="M86.2598 11.9299C86.2598 12.6033 86.1298 13.2833 85.8698 13.9699C85.6164 14.6499 85.2264 15.2766 84.6998 15.8499C84.1798 16.4233 83.5164 16.8866 82.7098 17.2399C81.9098 17.5866 80.9598 17.7599 79.8598 17.7599C78.4131 17.7599 77.1731 17.4366 76.1398 16.7899C75.1131 16.1366 74.3264 15.2366 73.7798 14.0899C73.2398 12.9433 72.9698 11.6199 72.9698 10.1199C72.9698 8.61994 73.2398 7.29994 73.7798 6.15994C74.3264 5.01327 75.1131 4.1166 76.1398 3.46994C77.1731 2.82327 78.4131 2.49994 79.8598 2.49994C81.0598 2.49994 82.0831 2.70327 82.9298 3.10994C83.7831 3.51661 84.4664 4.04994 84.9798 4.70994C85.4998 5.36994 85.8598 6.07661 86.0598 6.82994C86.1931 7.34327 86.2598 7.83994 86.2598 8.31994H82.2098C82.2098 8.10661 82.1964 7.91994 82.1698 7.75994C82.1098 7.32661 81.9798 6.94994 81.7798 6.62994C81.5798 6.30994 81.3164 6.06327 80.9898 5.88994C80.6698 5.70994 80.2931 5.61994 79.8598 5.61994C79.3398 5.61994 78.8698 5.77327 78.4498 6.07994C78.0298 6.3866 77.6931 6.86994 77.4398 7.52994C77.1931 8.18994 77.0698 9.05327 77.0698 10.1199C77.0698 11.1799 77.1931 12.0433 77.4398 12.7099C77.6931 13.3766 78.0298 13.8666 78.4498 14.1799C78.8698 14.4933 79.3398 14.6499 79.8598 14.6499C80.2331 14.6499 80.5631 14.5833 80.8498 14.4499C81.1431 14.3099 81.3898 14.1166 81.5898 13.8699C81.7898 13.6233 81.9431 13.3366 82.0498 13.0099C82.1564 12.6766 82.2098 12.3166 82.2098 11.9299H86.2598ZM95.0773 17.4999V13.8399C95.0773 13.7333 95.0773 13.5733 95.0773 13.3599C95.0773 13.1399 95.0773 12.9199 95.0773 12.6999C95.0773 12.4733 95.0773 12.2999 95.0773 12.1799C95.0773 11.5066 94.9773 10.9733 94.7773 10.5799C94.5773 10.1866 94.1473 9.98994 93.4873 9.98994C93.0606 9.98994 92.7173 10.0766 92.4573 10.2499C92.1973 10.4233 92.0073 10.6733 91.8873 10.9999C91.7739 11.3266 91.7173 11.7199 91.7173 12.1799L90.9373 11.3799C90.9373 10.4066 91.1206 9.56994 91.4873 8.86994C91.8539 8.16327 92.3673 7.61994 93.0273 7.23994C93.6873 6.85327 94.4606 6.65994 95.3473 6.65994C96.6606 6.65994 97.6139 7.03994 98.2073 7.79994C98.8073 8.55994 99.1073 9.62327 99.1073 10.9899C99.1073 11.3299 99.1073 11.7533 99.1073 12.2599C99.1073 12.7599 99.1073 13.3733 99.1073 14.0999V17.4999H95.0773ZM87.6873 17.4999V1.86994H91.7173V17.4999H87.6873ZM100.468 17.4999V6.87994H104.458V17.4999H100.468ZM102.458 5.62994C101.864 5.62994 101.344 5.47661 100.898 5.16994C100.458 4.86327 100.238 4.42661 100.238 3.85994C100.238 3.28661 100.458 2.84994 100.898 2.54994C101.344 2.24327 101.864 2.08994 102.458 2.08994C103.051 2.08994 103.568 2.24327 104.008 2.54994C104.454 2.84994 104.678 3.28661 104.678 3.85994C104.678 4.43327 104.454 4.87327 104.008 5.17994C103.568 5.47994 103.051 5.62994 102.458 5.62994ZM110.037 1.86994V17.4999H106.067V1.86994H110.037ZM115.939 1.86994V17.4999H111.969V1.86994H115.939ZM126.591 17.4999H122.551V2.74994H128.201C129.321 2.74994 130.297 2.97327 131.131 3.41994C131.964 3.85994 132.611 4.46327 133.071 5.22994C133.531 5.9966 133.761 6.86327 133.761 7.82994C133.761 8.79661 133.531 9.67661 133.071 10.4699C132.611 11.2566 131.964 11.8866 131.131 12.3599C130.297 12.8266 129.321 13.0599 128.201 13.0599H126.591V17.4999ZM126.591 11.8899L124.771 10.0699H127.791C128.124 10.0699 128.434 9.98994 128.721 9.82994C129.014 9.66327 129.251 9.41327 129.431 9.07994C129.611 8.74661 129.701 8.32994 129.701 7.82994C129.701 7.32994 129.611 6.92661 129.431 6.61994C129.251 6.31327 129.014 6.09327 128.721 5.95994C128.434 5.81994 128.124 5.74994 127.791 5.74994H124.771L126.591 3.92994V11.8899ZM134.86 17.4999V6.87994H138.85V17.4999H134.86ZM136.85 5.62994C136.256 5.62994 135.736 5.47661 135.29 5.16994C134.85 4.86327 134.63 4.42661 134.63 3.85994C134.63 3.28661 134.85 2.84994 135.29 2.54994C135.736 2.24327 136.256 2.08994 136.85 2.08994C137.443 2.08994 137.96 2.24327 138.4 2.54994C138.846 2.84994 139.07 3.28661 139.07 3.85994C139.07 4.43327 138.846 4.87327 138.4 5.17994C137.96 5.47994 137.443 5.62994 136.85 5.62994ZM144.429 1.86994V17.4999H140.459V1.86994H144.429ZM150.331 1.86994V17.4999H146.361V1.86994H150.331Z" fill="#1A1C1A"/>
+      </svg>
+    </div>
+    <h2 class="login-title">Увійти, щоб продовжити</h2>
+    <p class="login-sub">Ваші лікування та історія прийомів — тільки ваші</p>
+    <button class="google-btn" id="google-login-btn" onclick="googleLogin()">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.85 2.09-1.81 2.73v2.27h2.92c1.71-1.57 2.69-3.89 2.69-6.64z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.44 15.98 5.48 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.97 10.7c-.18-.54-.28-1.11-.28-1.7s.1-1.16.28-1.7V4.97H.96C.35 6.18 0 7.55 0 9s.35 2.82.96 4.03l3.01-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+      </svg>
+      <span id="google-login-label">Увійти через Google</span>
+    </button>
+    <p class="login-legal">Продовжуючи, ви погоджуєтесь з умовами використання та політикою конфіденційності</p>
+  </div>
+  <div class="login-privacy-note">🔒 Дані захищені та доступні лише вам</div>
+</div>
+
+<header class="topbar" style="display:none;">
   <button class="logo" onclick="switchTab('dashboard')" aria-label="На головну">
     <svg class="logo-full" width="153" height="24" viewBox="0 0 153 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M19.6983 19.2503C20.1567 19.4084 21.1641 20.2208 21.6162 20.554C25.1021 23.1228 30.1558 23.217 33.8565 21.0531C34.7192 20.5482 35.445 19.87 36.3184 19.3988C36.5105 19.2945 36.7785 19.4276 36.96 19.514C37.3722 20.0788 36.9695 20.498 36.5332 20.8782C32.1728 24.5235 26.2904 25.0213 21.3457 22.1341C20.608 21.7029 19.0569 20.8109 19.1153 19.8284C19.2517 19.4874 19.3667 19.4598 19.6983 19.2503ZM51.376 0.0335215C53.8768 -0.143391 57.7047 0.275654 55.7178 3.85383C55.3144 4.5798 54.2737 4.73821 53.4756 4.88997C52.8865 10.1953 50.6241 13.7733 45.3653 15.4398C42.1123 16.4993 38.5697 16.2046 35.5362 14.6234C32.7416 13.1813 30.7451 10.5568 30.1016 7.47883C29.7676 5.95765 29.9667 2.87395 27.4483 3.70247C26.4799 4.02067 26.3432 6.20725 26.1944 7.05598C25.4994 11.0173 23.3267 13.463 19.7422 15.0726C18.6785 15.5141 17.5632 15.8185 16.4229 15.9808C13.2714 16.4045 9.54643 15.5089 7.04982 13.5345C4.08324 11.1881 3.26732 8.4569 2.78322 4.94465C2.05624 4.82557 1.3363 4.68206 0.746111 4.20247C-0.647944 3.12599 0.0249784 0.373697 1.82521 0.252272C3.51339 0.13863 5.29351 0.185243 6.98928 0.184889C9.8898 0.18778 12.7911 0.173544 15.6914 0.14192L48.2266 0.04817C49.0824 0.0449174 50.4703 0.0976563 51.376 0.0335215Z" fill="#2D2B2B"/>
@@ -282,6 +325,11 @@
     <button class="tab" data-tab="history">Історія</button>
   </nav>
   <div class="topbar-right">
+    <div class="user-badge" id="user-badge">
+      <span class="user-avatar" id="user-avatar" aria-hidden="true">🙂</span>
+      <span class="user-name" id="user-name-label"></span>
+      <button class="btn-text logout-link" onclick="logout()">Вийти</button>
+    </div>
     <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Меню" aria-expanded="false">☰</button>
     <button class="btn btn-primary" onclick="openAdd()">+ Додати</button>
   </div>
@@ -291,10 +339,11 @@
     <button class="mobile-nav-item" data-tab="medications">Препарати</button>
     <button class="mobile-nav-item" data-tab="prescriptions">Рецепти</button>
     <button class="mobile-nav-item" data-tab="history">Історія</button>
+    <button class="mobile-nav-item" onclick="logout()" style="color:var(--conf-low-text);">🚪 Вийти</button>
   </div>
 </header>
 
-<main>
+<main style="display:none;">
 
   <!-- ============ DASHBOARD ============ -->
   <section id="view-dashboard" class="view is-active">
@@ -1216,6 +1265,67 @@ overall_confidence препарата = наименьшее значение с
   }
 
   renderAll();
+
+  // ---------------- Firebase Auth ----------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyCBe0fCk0kAvA4DNJMvgprc5MgNOi2PbZQ",
+    authDomain: "chill-pill-app.firebaseapp.com",
+    projectId: "chill-pill-app",
+    storageBucket: "chill-pill-app.firebasestorage.app",
+    messagingSenderId: "929184047740",
+    appId: "1:929184047740:web:d80c6ce8d4a12311719ff9"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+  function showApp(user) {
+    document.getElementById('view-login').style.display = 'none';
+    document.querySelector('.topbar').style.display = '';
+    document.querySelector('main').style.display = '';
+    document.getElementById('user-badge').style.display = 'flex';
+    document.getElementById('user-name-label').textContent = user.displayName || user.email;
+    const avatarEl = document.getElementById('user-avatar');
+    if (user.photoURL) {
+      avatarEl.innerHTML = `<img src="${user.photoURL}" alt="" referrerpolicy="no-referrer">`;
+    } else {
+      avatarEl.textContent = '🙂';
+    }
+  }
+
+  function showLogin() {
+    document.getElementById('view-login').style.display = 'flex';
+    document.querySelector('.topbar').style.display = 'none';
+    document.querySelector('main').style.display = 'none';
+    document.getElementById('user-badge').style.display = 'none';
+  }
+
+  function googleLogin() {
+    const btn = document.getElementById('google-login-btn');
+    btn.disabled = true;
+    document.getElementById('google-login-label').textContent = 'Вхід…';
+    auth.signInWithPopup(googleProvider).catch(err => {
+      console.error('Login failed:', err);
+      showToast('Помилка входу: ' + err.message);
+    }).finally(() => {
+      btn.disabled = false;
+      document.getElementById('google-login-label').textContent = 'Увійти через Google';
+    });
+  }
+
+  function logout() {
+    document.getElementById('mobile-nav').classList.remove('is-open');
+    auth.signOut();
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      showApp(user);
+    } else {
+      showLogin();
+    }
+  });
 </script>
 
 </body>
