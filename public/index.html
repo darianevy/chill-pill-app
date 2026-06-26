@@ -255,7 +255,7 @@
   .login-feature-icon { font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; background: var(--off-white); display: flex; align-items: center; justify-content: center; }
 
   .user-menu-wrap { position: relative; display: none; }
-  .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--primary-light); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-strong); flex-shrink: 0; overflow: hidden; }
+  .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--black); background: var(--primary-light); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-strong); flex-shrink: 0; overflow: hidden; }
   .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
   .user-menu { display: none; position: absolute; top: 54px; right: 0; background: var(--white); border: 2px solid var(--black); border-radius: 16px; box-shadow: 4px 4px 0 var(--black); padding: 14px; min-width: 210px; z-index: 30; }
   .user-menu.is-open { display: block; }
@@ -418,8 +418,8 @@
     <div class="section-sub">Як ви справляєтеся з лікуванням</div>
 
     <div class="stats-row">
-      <div class="stat-card accent"><div class="stat-value">92%</div><div class="stat-label">дотримання за 30 днів</div></div>
-      <div class="stat-card"><div class="stat-value">14 🔥</div><div class="stat-label">днів поспіль</div></div>
+      <div class="stat-card accent"><div class="stat-value" id="adherence-value">—</div><div class="stat-label">дотримання за 30 днів</div></div>
+      <div class="stat-card"><div class="stat-value" id="streak-value">0</div><div class="stat-label">днів поспіль</div></div>
     </div>
 
     <div class="section-sub" style="margin-top:6px;font-weight:700;color:var(--black);">Ваші курси лікування</div>
@@ -724,6 +724,13 @@
 
 
   function renderTimeline() {
+    const total = state.history.length;
+    const taken = state.history.filter(h => h.status === 'taken').length;
+    document.getElementById('adherence-value').textContent = total > 0 ? Math.round((taken / total) * 100) + '%' : '—';
+    let streak = 0;
+    for (const h of state.history) { if (h.status === 'taken') streak++; else break; }
+    document.getElementById('streak-value').textContent = streak > 0 ? streak + ' 🔥' : '0';
+
     const box = document.getElementById('timeline-list');
     const active = state.medications.filter(m => m.status === 'active');
     if (active.length === 0) { box.innerHTML = `<div class="card empty-state"><p>Поки немає активних курсів</p></div>`; return; }
