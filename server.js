@@ -138,6 +138,48 @@ app.post('/api/scan-prescription', async (req, res) => {
   }
 });
 
+app.post('/api/drug-info', async (req, res) => {
+  const { name, dosage } = req.body;
+  if (!name) return res.status(400).json({ error: 'Missing drug name' });
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'Server misconfiguration' });
+
+  const prompt = `Ти — фармацевтичний довідник. Для препарату "${name}"${dosage ? ' (дозування ' + dosage + ')' : ''} дай коротку структуровану інформацію українською мовою. Відповідай ТІЛЬКИ JSON без markdown:
+{
+  "usage": "для чого призначають (1-2 речення)",
+  "instructions": "як приймати (коротко, 1-2 речення)",
+  "sideEffects": "основні побічні ефекти (перелік через кому, до 5 штук)",
+  "contraindications": "основні протипоказання (перелік через кому, до 5 штук)",
+  "source": "tabletka.ua"
+}`;
+
+  try {
+    const response = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 512 }
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('[Drug info error]', response.status, errText);
+      return res.status(500).json({ error: 'Drug info failed' });
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.filter(p => p.text)?.map(p => p.text)?.join('\n') ?? '';
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    res.json(JSON.parse(cleaned));
+  } catch (err) {
+    console.error('[Drug info error]', err.message);
+    res.status(500).json({ error: 'Drug info failed' });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Chill Pill running → http://localhost:${PORT}`);

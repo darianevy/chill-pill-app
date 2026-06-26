@@ -767,7 +767,7 @@
     }
     box.innerHTML = list.map(m => {
       const dur = m.durationDays ? `${Math.max(m.durationDays - (m.elapsedDays || 0), 0)} з ${m.durationDays} днів` : 'постійно';
-      const hasDetails = m.instructions || m.sideEffects;
+      const hasDetails = m.instructions || m.sideEffects || m.usage || m.contraindications;
       const actions = m.status === 'active'
         ? `<button class="btn btn-secondary btn-sm" onclick="openEditMed('${m.id}')">Редагувати</button><button class="btn btn-secondary btn-sm" onclick="archiveMed('${m.id}')">Архівувати</button>`
         : `<button class="btn btn-secondary btn-sm" onclick="restoreMed('${m.id}')">Повернути в активні</button>`;
@@ -785,8 +785,10 @@
           ${hasDetails ? `
           <button class="btn-text" id="med-toggle-${m.id}" onclick="toggleMedDetails('${m.id}')" style="margin-top:12px;">Детальніше ▾</button>
           <div class="med-details" id="details-${m.id}">
+            ${m.usage ? `<span class="label">Призначення</span>${m.usage}` : ''}
             <span class="label">Інструкція із застосування</span>${m.instructions || 'інформація не вказана'}
             <span class="label">Можливі побічні ефекти</span>${m.sideEffects || 'інформація відсутня'}
+            ${m.contraindications ? `<span class="label">Протипоказання</span>${m.contraindications}` : ''}
             <div class="disclaimer-sm">Довідкова інформація, не замінює інструкцію виробника та консультацію лікаря.</div>
           </div>` : ''}
         </div>
@@ -1281,6 +1283,7 @@
       }
       medData.id = medId;
       state.medications.push(medData);
+      fetchDrugInfo(medData);
       for (let i = 0; i < times.length; i++) {
         const doseData = { medId, name: m.name + ' ' + m.dosage, time: times[i], status: i === 0 ? 'due' : 'upcoming' };
         if (userRef) {
@@ -1311,6 +1314,30 @@
     document.getElementById('overlay-add').classList.add('is-hidden');
     renderAll();
     showToast('Лікування додано, графік складено ✓');
+  }
+
+  async function fetchDrugInfo(medData) {
+    try {
+      const resp = await fetch('/api/drug-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: medData.name, dosage: medData.dosage })
+      });
+      if (!resp.ok) return;
+      const info = await resp.json();
+      const med = state.medications.find(m => m.id === medData.id);
+      if (!med) return;
+      med.usage = info.usage || '';
+      med.instructions = [med.instructions, info.instructions].filter(Boolean).join('. ') || '';
+      med.sideEffects = info.sideEffects || '';
+      med.contraindications = info.contraindications || '';
+      if (currentUserId) {
+        await db.collection('users').doc(currentUserId).collection('medications').doc(med.id).update({
+          usage: med.usage, instructions: med.instructions, sideEffects: med.sideEffects, contraindications: med.contraindications
+        });
+      }
+      renderMedications();
+    } catch (e) { console.error('Drug info fetch failed:', e); }
   }
 
   function showToast(text) {
