@@ -255,8 +255,8 @@
   .login-feature-icon { font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; background: var(--off-white); display: flex; align-items: center; justify-content: center; }
 
   .user-menu-wrap { position: relative; display: none; }
-  .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--black); background: var(--primary-light); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-strong); flex-shrink: 0; overflow: hidden; }
-  .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--black); background: var(--primary); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: none; flex-shrink: 0; overflow: hidden; color: var(--white); font-weight: 700; font-family: 'Epilogue', sans-serif; }
+  .avatar-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
   .user-menu { display: none; position: absolute; top: 54px; right: 0; background: var(--white); border: 2px solid var(--black); border-radius: 16px; box-shadow: 4px 4px 0 var(--black); padding: 14px; min-width: 210px; z-index: 30; }
   .user-menu.is-open { display: block; }
   .user-menu-name { font-weight: 700; font-size: 13.5px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(26,28,26,.12); }
@@ -1381,12 +1381,12 @@
         const [medsSnap, dosesSnap, historySnap, rxSnap] = await Promise.all([
           userRef.collection('medications').get(),
           userRef.collection('doses').get(),
-          userRef.collection('history').orderBy('timestamp', 'desc').get(),
+          userRef.collection('history').get(),
           userRef.collection('prescriptions').get()
         ]);
         state.medications = medsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         state.doses = dosesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        state.history = historySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        state.history = historySnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         state.prescriptions = rxSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (err) {
         console.error('Failed to load data from Firestore:', err);
