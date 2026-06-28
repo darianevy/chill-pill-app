@@ -790,11 +790,9 @@
     box.innerHTML = active.map(m => {
       if (m.durationDays) {
         const remaining = Math.max(m.durationDays - (m.elapsedDays || 0), 0);
-        const pct = Math.min(100, Math.round(((m.elapsedDays || 0) / m.durationDays) * 100));
         return `<div class="card timeline-card">
           <div class="timeline-name">${m.name}</div>
           <div class="timeline-remaining"><span class="big">Залишилось ${remaining} з ${m.durationDays} днів</span><span class="small">почато ${m.startDate}</span></div>
-          <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
         </div>`;
       }
       return `<div class="card timeline-card">
@@ -834,7 +832,6 @@
             <div><span class="label">Почато</span>${m.startDate}</div>
             <div><span class="label">${m.durationDays ? 'Залишилось' : 'Тривалість'}</span>${dur}</div>
           </div>
-          <div class="med-actions-row">${actions}</div>
           ${hasDetails ? `
           <button class="btn-text" id="med-toggle-${m.id}" onclick="toggleMedDetails('${m.id}')" style="margin-top:12px;">Детальніше ▾</button>
           <div class="med-details" id="details-${m.id}">
@@ -844,6 +841,7 @@
             ${m.contraindications ? `<span class="label">Протипоказання</span>${m.contraindications}` : ''}
             <div class="disclaimer-sm">Довідкова інформація, не замінює інструкцію виробника та консультацію лікаря.</div>
           </div>` : ''}
+          <div class="med-actions-row">${actions}</div>
         </div>
       </div>`;
     }).join('');
