@@ -166,17 +166,21 @@ app.post('/api/drug-info', async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[Drug info error]', response.status, errText);
-      return res.status(500).json({ error: 'Drug info failed' });
+      console.error('[Drug info API error]', response.status, errText);
+      return res.status(500).json({ error: 'Drug info failed', status: response.status, detail: errText });
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.filter(p => p.text)?.map(p => p.text)?.join('\n') ?? '';
+    if (!text) {
+      console.error('[Drug info no text]', JSON.stringify(data));
+      return res.status(500).json({ error: 'No text from Gemini', raw: data });
+    }
     const cleaned = text.replace(/```json|```/g, '').trim();
     res.json(JSON.parse(cleaned));
   } catch (err) {
     console.error('[Drug info error]', err.message);
-    res.status(500).json({ error: 'Drug info failed' });
+    res.status(500).json({ error: 'Drug info failed', detail: err.message });
   }
 });
 
